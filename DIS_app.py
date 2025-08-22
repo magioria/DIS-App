@@ -5,18 +5,20 @@ import seaborn as sns
 import streamlit as st
 import io
 import glob
+from pathlib import Path
 
-# Global outputs folder path
-OUTPUTS_DIR = "C:/Users/Matteo Capucci/DIS_Project/outputs"
-CORRELATION_DIR = "C:/Users/Matteo Capucci/DIS_Project/correlation"
+BASE_DIR = Path(__file__).parent
+
+OUTPUTS_DIR = BASE_DIR / "data"
+CORRELATION_DIR = BASE_DIR / "correlation"
 
 @st.cache_data
 def load_all_seasons():
-    files = sorted(glob.glob(f"{OUTPUTS_DIR}/DIS_*.csv"))
+    files = sorted(OUTPUTS_DIR.glob("DIS_*.csv"))
     dfs = []
-    for f in files:
-        season = f.split("DIS_")[-1].replace(".csv", "")
-        df = pd.read_csv(f)
+    for p in files:
+        season = p.stem.split("DIS_")[-1]
+        df = pd.read_csv(p)
         df["Season"] = season
         dfs.append(df)
     if dfs:
@@ -141,21 +143,13 @@ if page == "Correlation Analysis":
 else:
     render_intro()
 
-    # Map of season names to file paths
-    season_files = {
-        "2024-25": f"{OUTPUTS_DIR}/DIS_2024-25.csv",
-        "2023-24": f"{OUTPUTS_DIR}/DIS_2023-24.csv",
-        "2022-23": f"{OUTPUTS_DIR}/DIS_2022-23.csv",
-        "2021-22": f"{OUTPUTS_DIR}/DIS_2021-22.csv",
-        "2020-21": f"{OUTPUTS_DIR}/DIS_2020-21.csv",
-        "2019-20": f"{OUTPUTS_DIR}/DIS_2019-20.csv",
-        "2018-19": f"{OUTPUTS_DIR}/DIS_2018-19.csv",
-        "2017-18": f"{OUTPUTS_DIR}/DIS_2017-18.csv"
-    }
+    # Map of season names to file paths (built from /data contents)
+    season_files = {p.stem.split("DIS_")[1]: p for p in OUTPUTS_DIR.glob("DIS_*.csv")}
+    seasons_sorted = sorted(season_files.keys(), reverse=True)
 
-    # Sidebar: season selector
+    # Sidebar selector
     st.sidebar.title("Filters")
-    selected_season = st.sidebar.selectbox("Select season", list(season_files.keys()), index=0)
+    selected_season = st.sidebar.selectbox("Select season", seasons_sorted, index=0)
 
     # Load the selected season's data
     df = pd.read_csv(season_files[selected_season])
