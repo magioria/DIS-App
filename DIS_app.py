@@ -6,32 +6,37 @@ import streamlit as st
 import io
 import glob
 from pathlib import Path
+import re
 
 BASE_DIR = Path(__file__).parent
 
 OUTPUTS_DIR = BASE_DIR / "data"
 CORRELATION_DIR = BASE_DIR / "correlation"
 
-@st.cache_data
-def load_all_seasons():
-    files = sorted(OUTPUTS_DIR.glob("DIS_*.csv"))
-    dfs = []
-    for p in files:
-        season = p.stem.split("DIS_")[-1]
-        df = pd.read_csv(p)
-        df["Season"] = season
-        dfs.append(df)
-    if dfs:
-        return pd.concat(dfs, ignore_index=True)
-    return pd.DataFrame(columns=["Player", "Team", "Pos", "G", "MP", "DIS", "Season"])
+def norm_season(s: str) -> str:
+    # normalize crazy dashes/spaces
+    return s.strip().replace("–", "-").replace("—", "-")
 
-def season_order_key(s: str):
-    try:
-        start = int(s.split("-")[0])
-        end = int("20" + s.split("-")[1]) if len(s.split("-")[1]) == 2 else int(s.split("-")[1])
-        return (start, end)
-    except:
-        return (0, 0)
+# Build map: {"2024-25": Path(...), ...}
+season_files = {}
+for p in sorted(OUTPUTS_DIR.glob("DIS_*.csv")):
+    name = p.name  # e.g., DIS_2024-25.csv
+    m = re.match(r"^DIS_(.+)\.csv$", name)
+    if m:
+        season = norm_season(m.group(1))
+        season_files[season] = p
+
+if not season_files:
+    st.error("No data files found in ./data. Make sure DIS_YYYY-YY.csv files are committed to the repo.")
+    st.stop()
+
+# Sort seasons descending by year
+def season_key(s):
+    s = norm_season(s)
+    a, b = s.split("-")
+    return (int(a), int(b))  # works for 17-18, 2024-25, etc.
+
+seasons_sorted = sorted(season_files.keys(), key=season_key, reverse=True)
 
 def render_intro():
     # Title + description visible on BOTH pages
@@ -147,12 +152,12 @@ else:
     season_files = {p.stem.split("DIS_")[1]: p for p in OUTPUTS_DIR.glob("DIS_*.csv")}
     seasons_sorted = sorted(season_files.keys(), reverse=True)
 
-    # Sidebar selector
+
     st.sidebar.title("Filters")
     selected_season = st.sidebar.selectbox("Select season", seasons_sorted, index=0)
 
-    # Load the selected season's data
-    df = pd.read_csv(season_files[selected_season])
+    # Read the selected file
+    df = pd.read_csv(season_files[norm_season(selected_season)])
 
     # Select and clean columns
     columns_to_display = ["Player", "Team", "Pos", "G", "MP", "DIS"]
