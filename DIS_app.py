@@ -10,7 +10,7 @@ import re
 
 BASE_DIR = Path(__file__).parent
 
-OUTPUTS_DIR = BASE_DIR / "data"
+OUTPUTS_DIR = BASE_DIR / "outputs"
 CORRELATION_DIR = BASE_DIR / "correlation"
 
 @st.cache_data
