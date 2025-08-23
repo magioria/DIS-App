@@ -168,9 +168,9 @@ else:
     # 65-game rule note
     st.sidebar.markdown("""
 *From the 2023-24 season, the NBA implemented the 65-game rule: players must appear in at least 65 games to be eligible for awards like DPOY and All-Defensive teams.  
-In addition, players must play at least 20 minutes in all but two of those 65 games (≈ **1300 minutes**).
+In addition, players must play at least 20 minutes in all but two of those 65 games (≈ **1300 minutes**).*
 
-Keep this in mind if you want to filter for the eligible players ;)*
+*Keep this in mind if you want to filter for the eligible players ;)*
 """)
 
     # Team filter
