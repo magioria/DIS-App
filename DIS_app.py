@@ -41,18 +41,18 @@ def render_intro():
     st.markdown("""
 The **Defensive Impact Score**, abbreviated DIS, is a custom stat that estimates how impactful each player is on defense.
 
-Unlike traditional defensive stats that rely heavily on steals, blocks, or team ratings, DIS blends multiple layers of data, including box score performance, matchup quality, and contextual adjustments, to assess how **consistently** and **effectively** a player influences defensive outcomes.
+Unlike traditional defensive stats that rely heavily on steals, blocks, or team ratings, DIS blends multiple layers of data, including box score performance, matchup quality, and hustle stats, to assess how **consistently** and **effectively** a player influences defensive outcomes.
 
 DIS is designed to be **scale-consistent** across seasons, position-agnostic, and resilient to team-level noise, offering a robust tool for identifying both **elite** and **underrated defenders** who may not show up in highlight reels.
 
 It can be interpreted like this:
 
-- 25 or more → DPOY Season
-- 20–24.9 → Elite Defender
-- 13–19.9 → Amazing Defender
-- 7–12.9 → Good Defender
-- -5 to 6.9 → Average Defender (0 = dataset average)
-- Less than -5 → Poor Defender
+- 20 or more → Generational / DPOY-level season
+- 13–19.9 → Elite Defender 
+- 7–12.9 → Strong / Above-average defender
+- 0–6.9 → Solid contributor (average to good defense, reliable)
+- -5 to -0.1 → Below average (some defensive weaknesses)
+- Less than -5 → Poor Defender (significant negative impact)
                 
 ### How reliable is DIS?
 
