@@ -167,11 +167,11 @@ else:
 
     # 65-game rule note
     st.sidebar.markdown("""
-*From the 2023-24 season, the NBA implemented the 65-game rule: players must appear in at least 65 games to be eligible for awards like DPOY and All-Defensive teams.  
-In addition, players must play at least 20 minutes in all but two of those 65 games (≈ **1300 minutes**).*
+    *From the 2023-24 season, the NBA implemented the 65-game rule: players must appear in at least 65 games to be eligible for awards like DPOY and All-Defensive teams.  
+    In addition, players must play at least 20 minutes in all but two of those 65 games (≈ **1300 minutes**).*
 
-*Keep this in mind if you want to filter for the eligible players ;)*
-""")
+    *Keep this in mind if you want to filter for the eligible players ;)*
+    """)
 
     # Team filter
     teams = df_display["Team"].unique()
@@ -259,6 +259,8 @@ In addition, players must play at least 20 minutes in all but two of those 65 ga
             This makes the radar chart a tool for **relative comparison** — showing how a player stacks up against league norms, regardless of team or position.
             """)
 
+            st.divider()
+         
             # Player DIS History
             all_dis = load_all_seasons()
             player_name = player_row["Player"]
