@@ -163,12 +163,13 @@ else:
     min_games = st.sidebar.slider("Minimum Games Played", min_value=1, max_value=int(df_display["G"].max()), value=40, step=1)
 
     # Minutes filter
-    min_mp = st.sidebar.slider("Minimum Minutes Played", min_value=1, max_value=int(df_display["MP"].max()), value=1000, step=100)
+    min_mp = st.sidebar.slider("Minimum Minutes Played", min_value=1, max_value=int(df_display["MP"].max()), value=1000, step=50)
 
     # 65-game rule note
     st.sidebar.markdown("""
 *From the 2023-24 season, the NBA implemented the 65-game rule: players must appear in at least 65 games to be eligible for awards like DPOY and All-Defensive teams.  
-In addition, players must play at least 20 minutes in all but two of those 65 games (≈ **1300 minutes**).*
+In addition, players must play at least 20 minutes in all but two of those 65 games (≈ **1300 minutes**).
+Keep this in mind if you want to filter for the eligible players ;)*
 """)
 
     # Team filter
@@ -211,7 +212,7 @@ In addition, players must play at least 20 minutes in all but two of those 65 ga
             values = [player_row[col] for col in z_keys]; values += values[:1]
 
             # League average values
-            league_avg = [filtered_df[col].mean() for col in z_keys]; league_avg += league_avg[:1]
+            league_avg = [df[col].mean() for col in z_keys]; league_avg += league_avg[:1]
 
             # Radar angles
             angles = np.linspace(0, 2 * np.pi, len(labels), endpoint=False).tolist(); angles += angles[:1]
