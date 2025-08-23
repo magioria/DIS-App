@@ -202,7 +202,7 @@ Keep this in mind if you want to filter for the eligible players ;)*
         if result.empty:
             st.warning("Player not found.")
         else:
-            st.dataframe(result[columns_to_display])
+            st.dataframe(result[columns_to_display].rename_axis("Rank"))
 
         if len(result) == 1:
             player_row = result.iloc[0]
