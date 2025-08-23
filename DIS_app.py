@@ -241,6 +241,24 @@ Keep this in mind if you want to filter for the eligible players ;)*
                 mime="image/png"
             )
 
+            st.markdown("""
+            ### 📊 About the Radar Chart
+
+            The chart displays four defensive dimensions:
+
+            - **Hustle** → activity and effort beyond box score stats (like contests, recoveries, effort plays).  
+            - **Defensive Effectiveness** → overall success in stops, rim protection, and on-ball defense.  
+            - **Matchup Difficulty** → the average quality of offensive players a defender is matched against.  
+            - **D-LEBRON** → a trusted public defensive metric included for external context.  
+
+            All four categories are **z-score normalized across the league**:  
+            - The **league average is always 0**.  
+            - Positive values = above-average performance.  
+            - Negative values = below-average performance.  
+
+            This makes the radar chart a tool for **relative comparison** — showing how a player stacks up against league norms, regardless of team or position.
+            """)
+
             # Player DIS History
             all_dis = load_all_seasons()
             player_name = player_row["Player"]
