@@ -260,7 +260,7 @@ else:
         if result.empty:
             st.warning("Player not found.")
         else:
-            st.dataframe(result[columns_to_display].rename_axis("Rank"))
+            st.dataframe(style_table(result[columns_to_display].rename_axis("Rank")), use_container_width=True)
 
         if len(result) == 1:
             player_row = result.iloc[0]
@@ -347,7 +347,7 @@ else:
     elif players_to_compare:
         comparison_df = filtered_df[filtered_df["Player"].isin(players_to_compare)]
         st.subheader("Player Comparison")
-        st.dataframe(comparison_df[columns_to_display])
+        st.dataframe(style_table(comparison_df[columns_to_display]), use_container_width=True)
 
         # Bar chart
         st.subheader("DIS Comparison Chart")
@@ -369,10 +369,12 @@ else:
         else:
             st.subheader(f"Top Defensive Players — {selected_season} Season")
             st.dataframe(
+                style_table(
                 filtered_df[columns_to_display]
                 .reset_index(drop=True)
                 .rename_axis("Rank")
-                .rename(index=lambda x: x + 1)
+                .rename(index=lambda x: x + 1))
+                , use_container_width=True
             )
 
         avg_dis = round(filtered_df["DIS"].mean(), 3)
@@ -394,5 +396,5 @@ else:
                 )
                 avg_pos_dis = round(pos_df["DIS"].mean(), 2)
                 with st.expander(f"Top 10 {pos}s"):
-                    st.dataframe(top10)
+                    st.dataframe(style_table(top10), use_container_width=True)
                     st.markdown(f"**Average DIS for all {pos}s:** {avg_pos_dis}")
