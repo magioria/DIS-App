@@ -67,19 +67,24 @@ def plot_dis_scale_with_steps():
     fig.tight_layout()
     return fig
 
-def dis_color(val: float) -> str:
-    for low, high, _, color in BINS:
-        if low <= val < high:
-            txt = "white" if color not in ("#fdd835",) else "black"
-            return f"background-color: {color}; color: {txt}; font-weight: 600;"
-    return ""
+def style_table(df: pd.DataFrame):
+    styler = df.style
+    try:
+        styler = styler.hide(axis="index")
+    except Exception:
+        styler = styler.hide_index()
 
-def style_table(df: pd.DataFrame) -> pd.io.formats.style.Styler:
-    styler = df.style.hide(axis="index")
+    def dis_color(val: float) -> str:
+        for low, high, _, color in BINS:
+            if low <= val < high:
+                txt = "white" if color not in ("#fdd835",) else "black"
+                return f"background-color: {color}; color: {txt}; font-weight: 600;"
+        return ""
+
     if "DIS" in df.columns:
         styler = styler.apply(
-            lambda s: [dis_color(v) for v in s] if s.name=="DIS" else ["" for _ in s], 
-            axis=0
+            lambda s: [dis_color(v) for v in s] if s.name == "DIS" else ["" for _ in s],
+            axis=0,
         )
     return styler
 
