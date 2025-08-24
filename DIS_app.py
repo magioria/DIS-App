@@ -101,7 +101,7 @@ if page == "What is DIS?":
 
     DIS is designed to be **scale-consistent** across seasons, position-agnostic, and resilient to team-level noise, offering a robust tool for identifying both **elite** and **underrated defenders** who may not show up in highlight reels.
 
-    It can be interpreted like this:
+    DIS Interpretation Scale (color legend for tables and charts):
 
     - 20 or more → Generational / DPOY-level season
     - 13–19.9 → Elite Defender 
