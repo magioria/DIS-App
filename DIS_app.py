@@ -259,6 +259,9 @@ elif page == "Leaderboard":
                     .rename(index=lambda x: x + 1)),
                     use_container_width=True
                 )
+                avg_dis_pl = round(all_dis[all_dis["Player"] == player_name.lower()]["DIS"].mean(), 2)
+                st.markdown(f"**Average DIS for {player_name}:** {avg_dis_pl}")
+                
                 csv_bytes = player_hist.to_csv(index=False).encode("utf-8")
                 st.download_button(
                     "Download Player DIS History (CSV)",
