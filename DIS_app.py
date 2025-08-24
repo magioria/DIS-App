@@ -34,36 +34,89 @@ def season_order_key(s: str):
     except:
         return (0, 0)
 
+# Categories and thresholds
+BINS = [
+    (-18, -5,  "Poor Defender",          "#c62828"),  # red
+    (-5,   0,  "Below Average",          "#ef6c00"),  # orange
+    (0,    7,  "Solid Contributor",      "#fdd835"),  # yellow
+    (7,   13,  "Strong Defender",        "#9ccc65"),  # light green
+    (13,  20,  "Elite Defender",         "#43a047"),  # green
+    (20,  35,  "Generational / DPOY",    "#1b5e20"),  # dark green
+]
+
+BOUNDARIES = [-18, -5, 0, 7, 13, 20, 35]
+
+def plot_dis_scale_with_steps():
+    fig, ax = plt.subplots(figsize=(12, 2.6))
+    # Draw each colored band
+    for low, high, name, color in BINS:
+        ax.barh(0, high - low, left=low, color=color, edgecolor="black", height=0.6)
+        ax.text((low + high) / 2, 0, name,
+                ha="center", va="center", fontsize=10,
+                color="black", fontweight="bold")
+    # Vertical dashed boundary lines with labels
+    for x in BOUNDARIES:
+        ax.vlines(x, -0.5, 0.5, linestyles="dashed", linewidth=1.2, color="black")
+        ax.text(x, 0.55, f"{x:g}", ha="center", va="bottom", fontsize=10)
+    # Axis formatting
+    ax.set_xlim(min(BOUNDARIES), max(BOUNDARIES))
+    ax.set_ylim(-0.8, 0.9)
+    ax.set_yticks([])
+    ax.set_xlabel("DIS")
+    ax.set_title("DIS Interpretation Scale (green = best, red = worst)", fontsize=12, fontweight="bold")
+    fig.tight_layout()
+    return fig
+
+def dis_color(val: float) -> str:
+    for low, high, _, color in BINS:
+        if low <= val < high:
+            txt = "white" if color not in ("#fdd835",) else "black"
+            return f"background-color: {color}; color: {txt}; font-weight: 600;"
+    return ""
+
+def style_table(df: pd.DataFrame) -> pd.io.formats.style.Styler:
+    styler = df.style.hide(axis="index")
+    if "DIS" in df.columns:
+        styler = styler.apply(
+            lambda s: [dis_color(v) for v in s] if s.name=="DIS" else ["" for _ in s], 
+            axis=0
+        )
+    return styler
+
 def render_intro():
     # Title + description visible on BOTH pages
     st.title("Defensive Impact Score (DIS) 🏀")
     st.header("**What is DIS?**")
     st.markdown("""
-The **Defensive Impact Score**, abbreviated DIS, is a custom stat that estimates how impactful each player is on defense.
+    The **Defensive Impact Score**, abbreviated DIS, is a custom stat that estimates how impactful each player is on defense.
 
-Unlike traditional defensive stats that rely heavily on steals, blocks, or team ratings, DIS blends multiple layers of data, including box score performance, matchup quality, and hustle stats, to assess how **consistently** and **effectively** a player influences defensive outcomes.
+    Unlike traditional defensive stats that rely heavily on steals, blocks, or team ratings, DIS blends multiple layers of data, including box score performance, matchup quality, and hustle stats, to assess how **consistently** and **effectively** a player influences defensive outcomes.
 
-DIS is designed to be **scale-consistent** across seasons, position-agnostic, and resilient to team-level noise, offering a robust tool for identifying both **elite** and **underrated defenders** who may not show up in highlight reels.
+    DIS is designed to be **scale-consistent** across seasons, position-agnostic, and resilient to team-level noise, offering a robust tool for identifying both **elite** and **underrated defenders** who may not show up in highlight reels.
 
-It can be interpreted like this:
+    It can be interpreted like this:
 
-- 20 or more → Generational / DPOY-level season
-- 13–19.9 → Elite Defender 
-- 7–12.9 → Strong / Above-average defender
-- 0–6.9 → Solid contributor (average to good defense, reliable)
-- -5 to -0.1 → Below average (some defensive weaknesses)
-- Less than -5 → Poor Defender (significant negative impact)
+    - 20 or more → Generational / DPOY-level season
+    - 13–19.9 → Elite Defender 
+    - 7–12.9 → Strong / Above-average defender
+    - 0–6.9 → Solid contributor (average to good defense, reliable)
+    - -5 to -0.1 → Below average (some defensive weaknesses)
+    - Less than -5 → Poor Defender (significant negative impact)
+    """)
+
+    st.pyplot(plot_dis_scale_with_steps())
                 
-### How reliable is DIS?
+    st.markdown("""
+    ### How reliable is DIS?
 
-To test the credibility of DIS, we compared the **Top 20 DIS players each season** with the official **All-Defensive Teams** and **Defensive Player of the Year nominees**.  
+    To test the credibility of DIS, we compared the **Top 20 DIS players each season** with the official **All-Defensive Teams** and **Defensive Player of the Year nominees**.  
 
-- ✅ **60%** of the time, DIS perfectly matched the official awards selections.  
-- ⚪ **12%** were good matches (players recognized as strong defenders but not officially awarded).  
-- ❌ **28%** were mismatches (strong DIS players overlooked in awards).  
+    - ✅ **60%** of the time, DIS perfectly matched the official awards selections.  
+    - ⚪ **12%** were good matches (players recognized as strong defenders but not officially awarded).  
+    - ❌ **28%** were mismatches (strong DIS players overlooked in awards).  
 
-This validation shows that DIS aligns strongly with how defense is recognized in the NBA, while also highlighting **underrated defenders** who might not receive enough media or voting attention.
-""")
+    This validation shows that DIS aligns strongly with how defense is recognized in the NBA, while also highlighting **underrated defenders** who might not receive enough media or voting attention.
+    """)
     st.divider()
 
 page = st.sidebar.radio("Navigate", ["Leaderboard", "Correlation Analysis"])
@@ -202,7 +255,7 @@ else:
         if result.empty:
             st.warning("Player not found.")
         else:
-            st.dataframe(result[columns_to_display].rename_axis("Rank"))
+            st.dataframe(style_table(result[columns_to_display].rename_axis("Rank")), use_container_width=True)
 
         if len(result) == 1:
             player_row = result.iloc[0]
@@ -270,9 +323,11 @@ else:
                 st.subheader(f"{player_name} — DIS History")
                 st.line_chart(player_hist.set_index("Season")["DIS"])
                 st.dataframe(
+                    style_table(
                     player_hist[["Season","Team","Pos","G","MP","DIS"]]
                     .reset_index(drop=True)
-                    .rename(index=lambda x: x + 1)
+                    .rename(index=lambda x: x + 1)),
+                    use_container_width=True
                 )
                 csv_bytes = player_hist.to_csv(index=False).encode("utf-8")
                 st.download_button(
@@ -287,7 +342,7 @@ else:
     elif players_to_compare:
         comparison_df = filtered_df[filtered_df["Player"].isin(players_to_compare)]
         st.subheader("Player Comparison")
-        st.dataframe(comparison_df[columns_to_display])
+        st.dataframe(style_table(comparison_df[columns_to_display]), use_container_width=True)
 
         # Bar chart
         st.subheader("DIS Comparison Chart")
