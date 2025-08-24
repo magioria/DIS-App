@@ -319,8 +319,8 @@ elif page == "Leaderboard":
                     .rename_axis("Rank")
                     .rename(index=lambda x: x + 1)
                 )
+                avg_pos_dis = round(df[df["Pos"] == pos]["DIS"].mean(), 2)
                 avg_pos_filt_dis = round(pos_df["DIS"].mean(), 2)
-                avg_pos_dis = round(df["DIS"].mean(), 2)
                 with st.expander(f"Top 10 {pos}s"):
                     st.dataframe(style_table(top10), use_container_width=True)
                     st.markdown(f"**Average DIS for all {pos}s:** {avg_pos_dis}")
