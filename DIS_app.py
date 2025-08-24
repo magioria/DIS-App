@@ -255,7 +255,7 @@ else:
         if result.empty:
             st.warning("Player not found.")
         else:
-            st.dataframe(style_table(result[columns_to_display].rename_axis("Rank")), use_container_width=True)
+            st.dataframe(result[columns_to_display].rename_axis("Rank"))
 
         if len(result) == 1:
             player_row = result.iloc[0]
@@ -342,7 +342,7 @@ else:
     elif players_to_compare:
         comparison_df = filtered_df[filtered_df["Player"].isin(players_to_compare)]
         st.subheader("Player Comparison")
-        st.dataframe(style_table(comparison_df[columns_to_display]), use_container_width=True)
+        st.dataframe(comparison_df[columns_to_display])
 
         # Bar chart
         st.subheader("DIS Comparison Chart")
