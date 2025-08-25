@@ -260,10 +260,9 @@ elif page == "Leaderboard":
         if len(result) == 1:
             player_row = result.iloc[0]
 
+            show_player_profile(player_row, df)             
             # df_season = current season dataframe
             # player_row = the row for the player user selected (e.g., via st.dataframe selection or a selectbox)
-
-            show_player_profile(player_row, df)
 
             st.divider()
          
