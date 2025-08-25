@@ -88,6 +88,76 @@ def style_table(df: pd.DataFrame):
         )
     return styler
 
+def _dis_category(dis: float):
+    for lo, hi, name, color in BINS:
+        if lo <= dis < hi:
+            txt = "black" if color == "#fdd835" else "white"
+            return name, color, txt
+    return "—", "#e0e0e0", "black"
+
+def _percentile_of_value(series: pd.Series, value: float) -> float:
+    arr = np.asarray(series.dropna(), dtype=float)
+    if arr.size == 0:
+        return float("nan")
+    return float((arr <= value).mean() * 100.0)
+
+def _pct_bar(label: str, pct: float):
+    fig, ax = plt.subplots(figsize=(5.6, 0.5))
+    left = np.clip(pct, 0, 100)
+    ax.barh([0], [left], color="#43a047" if left >= 50 else "#ef6c00")
+    ax.barh([0], [100 - left], left=[left], color="#e0e0e0")
+    ax.set_xlim(0, 100); ax.set_yticks([]); ax.set_xlabel(label)
+    for sp in ["top","right","left","bottom"]:
+        ax.spines[sp].set_visible(False)
+    ax.text(left, 0, f" {left:.0f}%", va="center", ha="left", fontsize=11, color="black")
+    st.pyplot(fig, use_container_width=False)
+
+def _league_hist_with_marker(df_season: pd.DataFrame, player_dis: float, title: str):
+    fig, ax = plt.subplots(figsize=(7.5, 3.2))
+    ax.hist(df_season["DIS"], bins=30, color="#90caf9", edgecolor="black", alpha=0.75)
+    ax.axvline(player_dis, color="red", linewidth=2, linestyle="--")
+    ax.set_title(title, fontsize=12, fontweight="bold")
+    ax.set_xlabel("DIS"); ax.set_ylabel("Number of players")
+    st.pyplot(fig, use_container_width=True)
+
+def show_player_profile(player_row: pd.Series, df_season: pd.DataFrame):
+    """Render a player profile card + optional histogram.
+       - player_row: a single row (for the selected player) from df_season
+       - df_season: the full season dataframe (visible, public CSV)
+    """
+    player_name = str(player_row["Player"])
+    player_pos  = str(player_row.get("Pos", "—"))
+    player_dis  = float(player_row["DIS"])
+    cat, color, txt = _dis_category(player_dis)
+
+    # Header
+    st.subheader(f"{player_name} — {player_pos}")
+
+    # DIS badge
+    st.markdown(
+        f"<div style='display:inline-block;padding:6px 10px;border-radius:10px;"
+        f"background:{color};color:{txt};font-weight:700'>"
+        f"DIS {player_dis:.2f} · {cat}</div>",
+        unsafe_allow_html=True
+    )
+
+    # Percentiles
+    league_pct = _percentile_of_value(df_season["DIS"], player_dis)
+    _pct_bar("League percentile (this season)", league_pct)
+
+    if "Pos" in df_season.columns:
+        pos_series = df_season.loc[df_season["Pos"] == player_pos, "DIS"]
+        if len(pos_series) >= 5:
+            pos_pct = _percentile_of_value(pos_series, player_dis)
+            _pct_bar(f"Percentile among {player_pos}", pos_pct)
+
+    # Optional: distribution context
+    with st.expander("Show player in league distribution"):
+        _league_hist_with_marker(
+            df_season, player_dis,
+            title="League Distribution of DIS (player highlighted)"
+        )
+
 page = st.sidebar.radio("Navigate", ["What is DIS?", "Leaderboard", "Correlation Analysis"])
 
 if page == "What is DIS?":
@@ -189,58 +259,11 @@ elif page == "Leaderboard":
 
         if len(result) == 1:
             player_row = result.iloc[0]
-            z_keys = ["Z_Hustle", "Z_Defense", "Z_Difficulty", "Z_D_LEBRON"]
-            labels = ["Hustle", "Defensive Effectiveness", "Matchup Difficulty", "D-LEBRON"]
 
-            # Player values
-            values = [player_row[col] for col in z_keys]; values += values[:1]
+            # df_season = current season dataframe
+            # player_row = the row for the player user selected (e.g., via st.dataframe selection or a selectbox)
 
-            # League average values
-            league_avg = [df[col].mean() for col in z_keys]; league_avg += league_avg[:1]
-
-            # Radar angles
-            angles = np.linspace(0, 2 * np.pi, len(labels), endpoint=False).tolist(); angles += angles[:1]
-
-            # Plot radar
-            fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True))
-            ax.plot(angles, values, linewidth=2, color='royalblue', label=player_row["Player"])
-            ax.fill(angles, values, alpha=0.25, color='skyblue')
-            ax.plot(angles, league_avg, linewidth=2, color='gray', linestyle='dashed', label='League Average')
-            ax.fill(angles, league_avg, alpha=0.1, color='gray')
-            for i, val in enumerate(values[:-1]):
-                ax.text(angles[i], val + 0.15, f"{val:.2f}", ha='center', va='top', fontsize=14, color='red')
-            ax.set_xticks(angles[:-1]); ax.set_xticklabels(labels, fontsize=12)
-            ax.set_yticklabels([]); ax.set_ylim(-3, 5); ax.grid(True)
-            ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1.1), fontsize=10)
-            st.pyplot(fig)
-
-            # Save chart to memory
-            buf = io.BytesIO()
-            fig.savefig(buf, format="png", bbox_inches='tight'); buf.seek(0)
-            st.download_button(
-                label="Download Radar Chart as PNG",
-                data=buf,
-                file_name=f"{player_row['Player'].replace(' ', '_')}_Radar.png",
-                mime="image/png"
-            )
-
-            st.markdown("""
-            ### 📊 About the Radar Chart
-
-            The chart displays four defensive dimensions:
-
-            - **Hustle** → activity and effort beyond box score stats (like contests, recoveries, effort plays).  
-            - **Defensive Effectiveness** → overall success in stops, rim protection, and on-ball defense.  
-            - **Matchup Difficulty** → the average quality of offensive players a defender is matched against.  
-            - **D-LEBRON** → a trusted public defensive metric included for external context.  
-
-            All four categories are **z-score normalized across the league**:  
-            - The **league average is always 0**.  
-            - Positive values = above-average performance.  
-            - Negative values = below-average performance.  
-
-            This makes the radar chart a tool for **relative comparison** — showing how a player stacks up against league norms, regardless of team or position.
-            """)
+            show_player_profile(player_row, df)
 
             st.divider()
          
