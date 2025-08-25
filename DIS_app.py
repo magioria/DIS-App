@@ -99,7 +99,7 @@ if page == "What is DIS?":
 
     Unlike traditional defensive stats that rely heavily on steals, blocks, or team ratings, DIS blends multiple layers of data, including box score performance, matchup quality, and hustle stats, to assess how **consistently** and **effectively** a player influences defensive outcomes.
 
-    DIS is designed to be **scale-consistent** across seasons, position-agnostic, and resilient to team-level noise, offering a robust tool for identifying both **elite** and **underrated defenders** who may not show up in highlight reels.
+    DIS is designed to be **scale-consistent** across seasons, to evaluate players fairly regardless of their position, and to minimize the distortion caused by overall team performance, offering a robust tool for identifying both **elite** and **underrated defenders** who may not show up in highlight reels.
 
     DIS Interpretation Scale (color legend for tables and charts):
 
