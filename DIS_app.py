@@ -201,6 +201,10 @@ if page == "What is DIS?":
     """)
 
     st.pyplot(plot_dis_scale_with_steps())
+
+    st.markdown("""
+    **Note**: DIS values are standardized so that 0 always represents the league average across the dataset. Positive values = better than average, negative = worse than average.            
+    """)
                 
     st.markdown("""
     ### How reliable is DIS?
@@ -349,6 +353,9 @@ elif page == "Leaderboard":
 
         avg_dis = round(filtered_df["DIS"].mean(), 3)
         st.metric(label="Average DIS", value=avg_dis)
+        st.markdown("""
+        **Note**: DIS values are standardized so that 0 always represents the league average across the dataset. Positive values = better than average, negative = worse than average.            
+        """)
         st.metric(label="Players shown", value=len(filtered_df))
 
         # Top Defenders by Position
