@@ -101,10 +101,25 @@ def _percentile_of_value(series: pd.Series, value: float) -> float:
         return float("nan")
     return float((arr <= value).mean() * 100.0)
 
+def _pct_color(pct: float) -> str:
+    """Return color based on percentile, aligned with DIS categories."""
+    if pct < 20:
+        return "#c62828"   # red (Poor)
+    elif pct < 40:
+        return "#ef6c00"   # orange (Below Avg)
+    elif pct < 60:
+        return "#fdd835"   # yellow (Solid)
+    elif pct < 80:
+        return "#9ccc65"   # light green (Strong)
+    elif pct < 95:
+        return "#43a047"   # green (Elite)
+    else:
+        return "#1b5e20"   # dark green (Generational / DPOY)
+
 def _pct_bar(label: str, pct: float):
     fig, ax = plt.subplots(figsize=(5.6, 0.5))
     left = np.clip(pct, 0, 100)
-    ax.barh([0], [left], color="#43a047" if left >= 50 else "#ef6c00")
+    ax.barh([0], [left], color=_pct_color(left))
     ax.barh([0], [100 - left], left=[left], color="#e0e0e0")
     ax.set_xlim(0, 100); ax.set_yticks([]); ax.set_xlabel(label)
     for sp in ["top","right","left","bottom"]:
@@ -133,6 +148,10 @@ def show_player_profile(player_row: pd.Series, df_season: pd.DataFrame):
     # Header
     st.subheader(f"{player_name} — {player_pos}")
 
+    st.markdown("""
+    Percentiles show how a player ranks compared to others. For example, 90th percentile = better than 90% of the league.            
+    """)
+
     # DIS badge
     st.markdown(
         f"<div style='display:inline-block;padding:6px 10px;border-radius:10px;"
@@ -149,7 +168,7 @@ def show_player_profile(player_row: pd.Series, df_season: pd.DataFrame):
         pos_series = df_season.loc[df_season["Pos"] == player_pos, "DIS"]
         if len(pos_series) >= 5:
             pos_pct = _percentile_of_value(pos_series, player_dis)
-            _pct_bar(f"Percentile among {player_pos}", pos_pct)
+            _pct_bar(f"Percentile among {player_pos} (this season)", pos_pct)
 
     # Optional: distribution context
     with st.expander("Show player in league distribution"):
