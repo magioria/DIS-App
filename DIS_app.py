@@ -7,6 +7,7 @@ import io
 import glob
 from pathlib import Path
 import re
+import math
 
 BASE_DIR = Path(__file__).parent
 
@@ -88,30 +89,61 @@ def style_table(df: pd.DataFrame):
         )
     return styler
 
-def show_leaderboard(df, page_size=25, key="lb"):
-    import numpy as np
-    page = st.session_state.get(f"{key}_page", 0)
-    n_pages = max(1, int(np.ceil(len(df)/page_size)))
+def show_leaderboard(df: pd.DataFrame, page_size: int = 25, key: str = "lb"):
+    """
+    Paginated leaderboard with:
+      - Rank column (global rank, not just within the page)
+      - Prev / Next buttons
+      - Direct jump-to-page control
+      - Styled HTML table (no inner scroll on mobile)
+    """
+    # --- pagination state ---
+    n_rows = len(df)
+    n_pages = max(1, math.ceil(n_rows / page_size))
+    page = int(st.session_state.get(f"{key}_page", 0))
 
-    cols = st.columns([1,1,6])
-    with cols[0]:
-        if st.button("◀ Prev", disabled=(page==0), key=f"{key}_prev"):
-            page = max(0, page-1)
-    with cols[1]:
-        if st.button("Next ▶", disabled=(page>=n_pages-1), key=f"{key}_next"):
-            page = min(n_pages-1, page+1)
-    with cols[2]:
-        st.caption(f"Page {page+1} / {n_pages} · {len(df):,} rows")
+    # --- nav controls ---
+    nav_cols = st.columns([1, 1, 3, 2, 3])
+    with nav_cols[0]:
+        if st.button("◀ Prev", use_container_width=True, disabled=(page == 0), key=f"{key}_prev"):
+            page = max(0, page - 1)
+    with nav_cols[1]:
+        if st.button("Next ▶", use_container_width=True, disabled=(page >= n_pages - 1), key=f"{key}_next"):
+            page = min(n_pages - 1, page + 1)
+
+    with nav_cols[2]:
+        st.caption(f"Page {page + 1} / {n_pages} · {n_rows:,} rows")
+
+    with nav_cols[3]:
+        ps = st.selectbox(
+            "Rows / page",
+            options=[10, 25, 50, 100],
+            index=[10, 25, 50, 100].index(page_size) if page_size in [10,25,50,100] else 1,
+            key=f"{key}_ps",
+        )
+    if ps != page_size:
+        page_size = ps
+        n_pages = max(1, math.ceil(n_rows / page_size))
+        page = min(page, n_pages - 1)
+
+    with nav_cols[4]:
+        chosen = st.number_input("Jump to page", min_value=1, max_value=n_pages, value=page + 1, step=1, key=f"{key}_jump")
+        if int(chosen) - 1 != page:
+            page = int(chosen) - 1
 
     st.session_state[f"{key}_page"] = page
 
-    start, end = page*page_size, (page+1)*page_size
-    slice_df = df.iloc[start:end]
+    # --- slice & add global Rank column ---
+    start, end = page * page_size, min((page + 1) * page_size, n_rows)
+    slice_df = df.iloc[start:end].copy()
 
-    # Build Styler (your existing function)
-    styled = style_table(slice_df)
+    # compute global rank as in a sorted df (1-based)
+    # if df is already sorted the way you want, this is fine:
+    ranks = np.arange(start + 1, end + 1)
+    slice_df.insert(0, "Rank", ranks)
 
-    # Render as HTML (no inner scroll)
+    # --- styled HTML (keeps DIS colors; no nested scroll) ---
+    styled = style_table(slice_df)  # uses your existing styling for DIS
     st.markdown(styled.to_html(), unsafe_allow_html=True)
 
 def _dis_category(dis: float):
