@@ -88,6 +88,29 @@ def style_table(df: pd.DataFrame):
         )
     return styler
 
+def show_leaderboard(df, page_size=25, key="lb"):
+    # pagination state
+    page = st.session_state.get(f"{key}_page", 0)
+    n_pages = max(1, int(np.ceil(len(df)/page_size)))
+
+    cols = st.columns([1,1,6])
+    with cols[0]:
+        if st.button("◀ Prev", disabled=(page==0), key=f"{key}_prev"):
+            page = max(0, page-1)
+    with cols[1]:
+        if st.button("Next ▶", disabled=(page>=n_pages-1), key=f"{key}_next"):
+            page = min(n_pages-1, page+1)
+    with cols[2]:
+        st.caption(f"Page {page+1} / {n_pages} · {len(df):,} rows")
+
+    st.session_state[f"{key}_page"] = page
+
+    start, end = page*page_size, (page+1)*page_size
+    slice_df = df.iloc[start:end]
+
+    # use your styler but render with st.table to avoid inner scroll
+    st.table(style_table(slice_df), use_container_width=True)
+
 def _dis_category(dis: float):
     for lo, hi, name, color in BINS:
         if lo <= dis < hi:
@@ -342,14 +365,7 @@ elif page == "Leaderboard":
             st.warning("No players match the selected filters.")
         else:
             st.subheader(f"Top Defensive Players — {selected_season} Season")
-            st.dataframe(
-                style_table(
-                filtered_df[columns_to_display]
-                .reset_index(drop=True)
-                .rename_axis("Rank")
-                .rename(index=lambda x: x + 1))
-                , use_container_width=True
-            )
+            show_leaderboard(filtered_df[columns_to_display], page_size=25, key="main_lb")
 
         avg_dis = round(filtered_df["DIS"].mean(), 3)
         st.metric(label="Average DIS", value=avg_dis)
