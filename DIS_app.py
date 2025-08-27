@@ -89,7 +89,7 @@ def style_table(df: pd.DataFrame):
     return styler
 
 def show_leaderboard(df, page_size=25, key="lb"):
-    # pagination state
+    import numpy as np
     page = st.session_state.get(f"{key}_page", 0)
     n_pages = max(1, int(np.ceil(len(df)/page_size)))
 
@@ -108,8 +108,11 @@ def show_leaderboard(df, page_size=25, key="lb"):
     start, end = page*page_size, (page+1)*page_size
     slice_df = df.iloc[start:end]
 
-    # use your styler but render with st.table to avoid inner scroll
-    st.table(style_table(slice_df), use_container_width=True)
+    # Build Styler (your existing function)
+    styled = style_table(slice_df)
+
+    # Render as HTML (no inner scroll)
+    st.markdown(styled.to_html(), unsafe_allow_html=True)
 
 def _dis_category(dis: float):
     for lo, hi, name, color in BINS:
