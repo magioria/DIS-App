@@ -161,22 +161,12 @@ def render_leaderboard(df: pd.DataFrame, key: str = "lb",
 
     with bottom[1]:
         # one horizontal row
-        prev_col, nums_col, next_col, jump_col = st.columns([1.2, 6, 1.2, 1.6])
+        prev_col, jump_col, next_col = st.columns([2, 2, 2])
 
         with prev_col:
             if st.button("◀ Prev", use_container_width=True, disabled=(page == 0),
                          key=f"{key}_prev"):
                 page = max(0, page - 1)
-
-        with nums_col:
-            nums = _page_buttons(page + 1, n_pages, window=7)
-            num_cols = st.columns(len(nums))
-            for i, pnum in enumerate(nums):
-                active = (pnum == page + 1)
-                label = f"**{pnum}**" if active else f"{pnum}"
-                if num_cols[i].button(label, key=f"{key}_p{pnum}",
-                                      use_container_width=True):
-                    page = pnum - 1
 
         with next_col:
             if st.button("Next ▶", use_container_width=True,
