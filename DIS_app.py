@@ -89,62 +89,121 @@ def style_table(df: pd.DataFrame):
         )
     return styler
 
-def show_leaderboard(df: pd.DataFrame, page_size: int = 25, key: str = "lb"):
+def _dis_cell_html(v: float) -> str:
+    color = "#e0e0e0"; txt = "black"
+    for lo, hi, _, col in BINS:
+        if lo <= v < hi:
+            color = col
+            txt = "black" if col == "#fdd835" else "white"
+            break
+    return (f"<div style='background:{color};color:{txt};font-weight:600;"
+            f"padding:2px 8px;border-radius:6px;text-align:right'>{v:.6f}</div>")
+
+@st.cache_data(ttl=120)
+def _slice_to_html(df_slice: pd.DataFrame) -> str:
+    """Fast HTML table with colored DIS cells (no Styler = faster)."""
+    html = df_slice.to_html(index=False, escape=False,
+                            formatters={"DIS": _dis_cell_html})
+    return "<style>table{width:100%!important}</style>" + html
+
+def _page_buttons(current: int, total: int, window: int = 7) -> list[int]:
+    """Return a compact list of page numbers to show (1-based)."""
+    if total <= window:
+        return list(range(1, total + 1))
+    half = window // 2
+    start = max(1, current - half)
+    end = min(total, start + window - 1)
+    start = max(1, end - window + 1)
+    return list(range(start, end + 1))
+
+def render_leaderboard(df: pd.DataFrame, key: str = "lb",
+                       page_size_options=(10, 25, 50, 100),
+                       default_page_size=25,
+                       sort_by="DIS", descending=True):
     """
-    Paginated leaderboard with:
-      - Rank column (global rank, not just within the page)
-      - Prev / Next buttons
-      - Direct jump-to-page control
-      - Styled HTML table (no inner scroll on mobile)
+    Renders a paginated leaderboard:
+      - 'Rows per page' select at top-left
+      - Rank column (global)
+      - Footer with Prev / numbered pages / Next aligned to bottom-right
+      - Fast HTML rendering (no nested scroll)
     """
-    # --- pagination state ---
+
+    # ── sort once (this defines Rank) ────────────────────────────────────────
+    if sort_by in df.columns:
+        df = df.sort_values(sort_by, ascending=not descending).reset_index(drop=True)
+
+    # ── top row: rows-per-page control (left) ───────────────────────────────
+    top = st.columns([2, 8])
+    with top[0]:
+        page_size = st.selectbox("per page",
+                                 page_size_options,
+                                 index=page_size_options.index(default_page_size)
+                                       if default_page_size in page_size_options else 1,
+                                 key=f"{key}_ps")
+    with top[1]:
+        st.write("")  # spacer to keep layout tidy
+
+    # pagination state
     n_rows = len(df)
     n_pages = max(1, math.ceil(n_rows / page_size))
     page = int(st.session_state.get(f"{key}_page", 0))
+    page = min(page, n_pages - 1)
 
-    # --- nav controls ---
-    nav_cols = st.columns([1, 1, 3, 2, 3])
-    with nav_cols[0]:
-        if st.button("◀ Prev", use_container_width=True, disabled=(page == 0), key=f"{key}_prev"):
-            page = max(0, page - 1)
-    with nav_cols[1]:
-        if st.button("Next ▶", use_container_width=True, disabled=(page >= n_pages - 1), key=f"{key}_next"):
-            page = min(n_pages - 1, page + 1)
-
-    with nav_cols[2]:
-        st.caption(f"Page {page + 1} / {n_pages} · {n_rows:,} rows")
-
-    with nav_cols[3]:
-        ps = st.selectbox(
-            "Rows / page",
-            options=[10, 25, 50, 100],
-            index=[10, 25, 50, 100].index(page_size) if page_size in [10,25,50,100] else 1,
-            key=f"{key}_ps",
-        )
-    if ps != page_size:
-        page_size = ps
-        n_pages = max(1, math.ceil(n_rows / page_size))
-        page = min(page, n_pages - 1)
-
-    with nav_cols[4]:
-        chosen = st.number_input("Jump to page", min_value=1, max_value=n_pages, value=page + 1, step=1, key=f"{key}_jump")
-        if int(chosen) - 1 != page:
-            page = int(chosen) - 1
-
-    st.session_state[f"{key}_page"] = page
-
-    # --- slice & add global Rank column ---
+    # ── slice & add Rank (global) ───────────────────────────────────────────
     start, end = page * page_size, min((page + 1) * page_size, n_rows)
     slice_df = df.iloc[start:end].copy()
 
-    # compute global rank as in a sorted df (1-based)
-    # if df is already sorted the way you want, this is fine:
-    ranks = np.arange(start + 1, end + 1)
-    slice_df.insert(0, "Rank", ranks)
+    # insert global Rank as the first column (1-based, across whole df)
+    slice_df.insert(0, "Rank", np.arange(start + 1, end + 1))
 
-    # --- styled HTML (keeps DIS colors; no nested scroll) ---
-    styled = style_table(slice_df)  # uses your existing styling for DIS
-    st.markdown(styled.to_html(), unsafe_allow_html=True)
+    # choose visible columns (Rank + your core set; keep only present ones)
+    base_cols = ["Rank", "Player", "Team", "Pos", "G", "MP", "DIS"]
+    visible = [c for c in base_cols if c in slice_df.columns]
+    slice_df = slice_df[visible]
+
+    # ── table (fast HTML / no inner scroll) ─────────────────────────────────
+    st.markdown(_slice_to_html(slice_df), unsafe_allow_html=True)
+
+    # ── bottom row: footer (left = info, right = pagination) ────────────────
+    bottom = st.columns([6, 6])
+
+    with bottom[0]:
+        st.caption(f"{start + 1} to {end} of {n_rows:,}")
+
+    with bottom[1]:
+        # align right by creating a sub-grid
+        c = st.columns([1, 7, 1, 1])
+        with c[1]:  # center area for the actual controls to appear right-ish
+            pg_cols = st.columns([1.2, 6, 1.2])  # prev | numbers | next
+
+            with pg_cols[0]:
+                if st.button("◀ Prev", use_container_width=True, disabled=(page == 0),
+                             key=f"{key}_prev"):
+                    page = max(0, page - 1)
+
+            with pg_cols[1]:
+                # numbered buttons
+                nums = _page_buttons(page + 1, n_pages, window=7)
+                num_cols = st.columns(len(nums))
+                for i, pnum in enumerate(nums):
+                    active = (pnum == page + 1)
+                    label = f"**{pnum}**" if active else f"{pnum}"
+                    if num_cols[i].button(label, key=f"{key}_p{pnum}",
+                                          use_container_width=True):
+                        page = pnum - 1
+
+            with pg_cols[2]:
+                if st.button("Next ▶", use_container_width=True,
+                             disabled=(page >= n_pages - 1),
+                             key=f"{key}_next"):
+                    page = min(n_pages - 1, page + 1)
+
+    # persist new page; reset to page 0 if page size changed
+    prev_ps = st.session_state.get(f"{key}_ps_prev", None)
+    if prev_ps is None or prev_ps != page_size:
+        page = 0
+    st.session_state[f"{key}_ps_prev"] = page_size
+    st.session_state[f"{key}_page"] = page
 
 def _dis_category(dis: float):
     for lo, hi, name, color in BINS:
@@ -400,7 +459,10 @@ elif page == "Leaderboard":
             st.warning("No players match the selected filters.")
         else:
             st.subheader(f"Top Defensive Players — {selected_season} Season")
-            show_leaderboard(filtered_df[columns_to_display], page_size=25, key="main_lb")
+            render_leaderboard(filtered_df, key="main_lb",
+                   page_size_options=(10,25,50,100),
+                   default_page_size=25,
+                   sort_by="DIS", descending=True)
 
         avg_dis = round(filtered_df["DIS"].mean(), 3)
         st.metric(label="Average DIS", value=avg_dis)
