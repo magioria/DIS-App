@@ -161,7 +161,7 @@ def render_leaderboard(df: pd.DataFrame, key: str = "lb",
 
     with bottom[1]:
         # one horizontal row
-        prev_col, jump_col, next_col = st.columns([2, 2, 2])
+        prev_col, jump_col, next_col = st.columns([2, 5, 2])
 
         with prev_col:
             if st.button("◀ Prev", use_container_width=True, disabled=(page == 0),
