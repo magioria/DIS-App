@@ -68,26 +68,41 @@ def plot_dis_scale_with_steps():
     fig.tight_layout()
     return fig
 
-def style_table(df: pd.DataFrame):
-    styler = df.style
-    try:
-        styler = styler.hide(axis="index")
-    except Exception:
-        styler = styler.hide_index()
+def style_table(df: pd.DataFrame) -> str:
+    """
+    Convert DataFrame into styled HTML with DIS column colored like a pill.
+    Returns HTML string for st.markdown.
+    """
+    BINS = [
+        (-18, -5,  "#c62828"),  # red
+        (-5,   0,  "#ef6c00"),  # orange
+        (0,    7,  "#fdd835"),  # yellow
+        (7,   13,  "#9ccc65"),  # light green
+        (13,  20,  "#43a047"),  # green
+        (20,  35,  "#1b5e20"),  # dark green
+    ]
 
-    def dis_color(val: float) -> str:
-        for low, high, _, color in BINS:
+    def dis_style(val: float) -> str:
+        for low, high, color in BINS:
             if low <= val < high:
-                txt = "white" if color not in ("#fdd835",) else "black"
-                return f"background-color: {color}; color: {txt}; font-weight: 600;"
+                return (
+                    f"background-color: {color}; "
+                    f"color: white; font-weight: 600; "
+                    f"padding: 4px 8px; border-radius: 8px; "
+                    f"display: inline-block; text-align: center;"
+                )
         return ""
 
+    styled = df.style
+    try:
+        styled = styled.hide(axis="index")
+    except Exception:
+        styled = styled.hide_index()
+
     if "DIS" in df.columns:
-        styler = styler.apply(
-            lambda s: [dis_color(v) for v in s] if s.name == "DIS" else ["" for _ in s],
-            axis=0,
-        )
-    return styler
+        styled = styled.applymap(dis_style, subset=["DIS"])
+
+    return styled.to_html()
 
 def _dis_cell_html(v: float) -> str:
     """Return HTML for a colored DIS cell (fast, no Styler)."""
@@ -106,16 +121,6 @@ def _slice_to_html(df_slice: pd.DataFrame) -> str:
     html = df_slice.to_html(index=False, escape=False,
                             formatters={"DIS": _dis_cell_html})
     return "<style>table{width:100%!important}</style>" + html
-
-def _page_window(current: int, total: int, window: int = 7) -> list[int]:
-    """Return a compact list of page numbers to show (1-based)."""
-    if total <= window:
-        return list(range(1, total + 1))
-    half = window // 2
-    start = max(1, current - half)
-    end = min(total, start + window - 1)
-    start = max(1, end - window + 1)
-    return list(range(start, end + 1))
 
 # ----- Callbacks (single source of truth) -----
 def _set_page(key: str, n_pages: int, set_to: int | None = None, delta: int | None = None):
@@ -431,7 +436,9 @@ elif page == "Leaderboard":
         if result.empty:
             st.warning("Player not found.")
         else:
-            st.dataframe(style_table(result[columns_to_display].rename_axis("Rank")), use_container_width=True)
+            tbl = result[columns_to_display].reset_index(drop=True).copy()
+            tbl.insert(0, "Rank", np.arange(1, len(tbl) + 1))  # optional, if you want Rank shown
+            st.markdown(style_table(tbl), unsafe_allow_html=True)
 
         if len(result) == 1:
             player_row = result.iloc[0]
@@ -450,13 +457,11 @@ elif page == "Leaderboard":
                 player_hist = player_hist.sort_values("Season", key=lambda s: s.map(season_order_key))
                 st.subheader(f"{player_name} — DIS History")
                 st.line_chart(player_hist.set_index("Season")["DIS"])
-                st.dataframe(
-                    style_table(
-                    player_hist[["Season","Team","Pos","G","MP","DIS"]]
-                    .reset_index(drop=True)
-                    .rename(index=lambda x: x + 1)),
-                    use_container_width=True
-                )
+                hist_tbl = (
+                player_hist[["Season","Team","Pos","G","MP","DIS"]].reset_index(drop=True))
+                hist_tbl.insert(0, "Rank", np.arange(1, len(hist_tbl) + 1))
+                st.markdown(style_table(hist_tbl), unsafe_allow_html=True)
+
                 # ✅ Average DIS across all seasons this player actually played
                 avg_dis_pl = round(player_hist["DIS"].astype(float).mean(), 2)
                 st.markdown(f"**Average DIS for {player_name}:** {avg_dis_pl}")
@@ -474,7 +479,8 @@ elif page == "Leaderboard":
     elif players_to_compare:
         comparison_df = filtered_df[filtered_df["Player"].isin(players_to_compare)]
         st.subheader("Player Comparison")
-        st.dataframe(style_table(comparison_df[columns_to_display]), use_container_width=True)
+        tbl = comparison_df[columns_to_display].reset_index(drop=True).copy()
+        st.markdown(style_table(tbl), unsafe_allow_html=True)
 
         # Bar chart
         st.subheader("DIS Comparison Chart")
@@ -523,7 +529,7 @@ elif page == "Leaderboard":
                 avg_pos_dis = round(df[df["Pos"] == pos]["DIS"].mean(), 2)
                 avg_pos_filt_dis = round(pos_df["DIS"].mean(), 2)
                 with st.expander(f"Top 10 {pos}s"):
-                    st.dataframe(style_table(top10), use_container_width=True)
+                    st.markdown(style_table(top10), unsafe_allow_html=True)
                     st.markdown(f"**Average DIS for all {pos}s:** {avg_pos_dis}")
                     st.markdown(f"**Average DIS for all {pos}s (only filtered players):** {avg_pos_filt_dis}")
 
