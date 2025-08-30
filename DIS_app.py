@@ -68,41 +68,26 @@ def plot_dis_scale_with_steps():
     fig.tight_layout()
     return fig
 
-def style_table(df: pd.DataFrame) -> str:
-    """
-    Convert DataFrame into styled HTML with DIS column colored like a pill.
-    Returns HTML string for st.markdown.
-    """
-    BINS = [
-        (-18, -5,  "#c62828"),  # red
-        (-5,   0,  "#ef6c00"),  # orange
-        (0,    7,  "#fdd835"),  # yellow
-        (7,   13,  "#9ccc65"),  # light green
-        (13,  20,  "#43a047"),  # green
-        (20,  35,  "#1b5e20"),  # dark green
-    ]
+def style_table(df: pd.DataFrame):
+    styler = df.style
+    try:
+        styler = styler.hide(axis="index")
+    except Exception:
+        styler = styler.hide_index()
 
-    def dis_style(val: float) -> str:
-        for low, high, color in BINS:
+    def dis_color(val: float) -> str:
+        for low, high, _, color in BINS:
             if low <= val < high:
-                return (
-                    f"background-color: {color}; "
-                    f"color: white; font-weight: 600; "
-                    f"padding: 4px 8px; border-radius: 8px; "
-                    f"display: inline-block; text-align: center;"
-                )
+                txt = "white" if color not in ("#fdd835",) else "black"
+                return f"background-color: {color}; color: {txt}; font-weight: 600;"
         return ""
 
-    styled = df.style
-    try:
-        styled = styled.hide(axis="index")
-    except Exception:
-        styled = styled.hide_index()
-
     if "DIS" in df.columns:
-        styled = styled.applymap(dis_style, subset=["DIS"])
-
-    return styled.to_html()
+        styler = styler.apply(
+            lambda s: [dis_color(v) for v in s] if s.name == "DIS" else ["" for _ in s],
+            axis=0,
+        )
+    return styler
 
 def _dis_cell_html(v: float) -> str:
     """Return HTML for a colored DIS cell (fast, no Styler)."""
@@ -436,9 +421,7 @@ elif page == "Leaderboard":
         if result.empty:
             st.warning("Player not found.")
         else:
-            tbl = result[columns_to_display].reset_index(drop=True).copy()
-            tbl.insert(0, "Rank", np.arange(1, len(tbl) + 1))  # optional, if you want Rank shown
-            st.markdown(style_table(tbl), unsafe_allow_html=True)
+            st.dataframe(style_table(result[columns_to_display].rename_axis("Rank")), use_container_width=True)
 
         if len(result) == 1:
             player_row = result.iloc[0]
@@ -457,11 +440,13 @@ elif page == "Leaderboard":
                 player_hist = player_hist.sort_values("Season", key=lambda s: s.map(season_order_key))
                 st.subheader(f"{player_name} — DIS History")
                 st.line_chart(player_hist.set_index("Season")["DIS"])
-                hist_tbl = (
-                player_hist[["Season","Team","Pos","G","MP","DIS"]].reset_index(drop=True))
-                hist_tbl.insert(0, "Rank", np.arange(1, len(hist_tbl) + 1))
-                st.markdown(style_table(hist_tbl), unsafe_allow_html=True)
-
+                st.dataframe(
+                    style_table(
+                    player_hist[["Season","Team","Pos","G","MP","DIS"]]
+                    .reset_index(drop=True)
+                    .rename(index=lambda x: x + 1)),
+                    use_container_width=True
+                )
                 # ✅ Average DIS across all seasons this player actually played
                 avg_dis_pl = round(player_hist["DIS"].astype(float).mean(), 2)
                 st.markdown(f"**Average DIS for {player_name}:** {avg_dis_pl}")
@@ -479,8 +464,7 @@ elif page == "Leaderboard":
     elif players_to_compare:
         comparison_df = filtered_df[filtered_df["Player"].isin(players_to_compare)]
         st.subheader("Player Comparison")
-        tbl = comparison_df[columns_to_display].reset_index(drop=True).copy()
-        st.markdown(style_table(tbl), unsafe_allow_html=True)
+        st.dataframe(style_table(comparison_df[columns_to_display]), use_container_width=True)
 
         # Bar chart
         st.subheader("DIS Comparison Chart")
@@ -529,7 +513,7 @@ elif page == "Leaderboard":
                 avg_pos_dis = round(df[df["Pos"] == pos]["DIS"].mean(), 2)
                 avg_pos_filt_dis = round(pos_df["DIS"].mean(), 2)
                 with st.expander(f"Top 10 {pos}s"):
-                    st.markdown(style_table(top10), unsafe_allow_html=True)
+                    st.dataframe(style_table(top10), use_container_width=True)
                     st.markdown(f"**Average DIS for all {pos}s:** {avg_pos_dis}")
                     st.markdown(f"**Average DIS for all {pos}s (only filtered players):** {avg_pos_filt_dis}")
 
