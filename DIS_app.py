@@ -90,6 +90,7 @@ def style_table(df: pd.DataFrame):
     return styler
 
 def _dis_cell_html(v: float) -> str:
+    """Return HTML for a colored DIS cell (fast, no Styler)."""
     color = "#e0e0e0"; txt = "black"
     for lo, hi, _, col in BINS:
         if lo <= v < hi:
@@ -101,11 +102,13 @@ def _dis_cell_html(v: float) -> str:
 
 @st.cache_data(ttl=120)
 def _slice_to_html(df_slice: pd.DataFrame) -> str:
+    """Cache the HTML of a page slice to improve paging speed."""
     html = df_slice.to_html(index=False, escape=False,
                             formatters={"DIS": _dis_cell_html})
     return "<style>table{width:100%!important}</style>" + html
 
-def _page_buttons(current: int, total: int, window: int = 7) -> list[int]:
+def _page_window(current: int, total: int, window: int = 7) -> list[int]:
+    """Return a compact list of page numbers to show (1-based)."""
     if total <= window:
         return list(range(1, total + 1))
     half = window // 2
@@ -114,81 +117,139 @@ def _page_buttons(current: int, total: int, window: int = 7) -> list[int]:
     start = max(1, end - window + 1)
     return list(range(start, end + 1))
 
+# ----- Callbacks (single source of truth) -----
+def _set_page(key: str, n_pages: int, set_to: int | None = None, delta: int | None = None):
+    """Update the page in session_state with proper clamping."""
+    page_key = f"{key}_page"
+    page = int(st.session_state.get(page_key, 0))
+    if set_to is not None:
+        page = int(set_to)
+    elif delta is not None:
+        page = page + int(delta)
+    page = max(0, min(page, n_pages - 1))
+    st.session_state[page_key] = page
+    # keep the jump input in sync (1-based)
+    st.session_state[f"{key}_jump_val"] = page + 1
+
+def _jump_changed(key: str, n_pages: int):
+    """Callback when the jump number_input changes."""
+    val = int(st.session_state.get(f"{key}_jump_val", 1))
+    val = max(1, min(val, n_pages))
+    _set_page(key, n_pages, set_to=val - 1)
+
+def _ps_changed(key: str):
+    """Callback when page size changes: reset to first page."""
+    st.session_state[f"{key}_page"] = 0
+    # jump value will be synced on next render
+
 def render_leaderboard(df: pd.DataFrame, key: str = "lb",
                        page_size_options=(10, 25, 50, 100),
                        default_page_size=25,
                        sort_by="DIS", descending=True):
+    """
+    Stable, mobile-friendly leaderboard:
+      - 'per page' selector (top-left)
+      - Rank column (global)
+      - One-row footer: Prev • 1 2 3 … • Next • Page [jump]
+      - Pagination controlled via callbacks (no double-advance)
+    """
 
-    # sort once (defines Rank)
+    # ---- sort once (defines Rank across the whole table) ----
     if sort_by in df.columns:
         df = df.sort_values(sort_by, ascending=not descending).reset_index(drop=True)
 
-    # ── TOP: rows per page (left) ────────────────────────────────────────────
+    # ---- init session keys ----
+    page_key = f"{key}_page"
+    ps_key = f"{key}_ps"
+    jump_key = f"{key}_jump_val"
+    if page_key not in st.session_state:
+        st.session_state[page_key] = 0
+    if ps_key not in st.session_state:
+        st.session_state[ps_key] = default_page_size
+    if jump_key not in st.session_state:
+        st.session_state[jump_key] = 1
+
+    # ---- TOP: rows-per-page selector ----
     top = st.columns([2, 8])
     with top[0]:
-        page_size = st.selectbox(
+        st.selectbox(
             "per page",
             page_size_options,
-            index=page_size_options.index(default_page_size)
-                  if default_page_size in page_size_options else 1,
-            key=f"{key}_ps"
+            index=(page_size_options.index(st.session_state[ps_key])
+                   if st.session_state[ps_key] in page_size_options else 1),
+            key=ps_key,
+            on_change=_ps_changed,
+            args=(key,),
         )
     with top[1]:
-        st.write("")  # spacer
+        st.write("")
 
-    # pagination state
+    page_size = int(st.session_state[ps_key])
+
+    # ---- compute pagination ----
     n_rows = len(df)
     n_pages = max(1, math.ceil(n_rows / page_size))
-    page = int(st.session_state.get(f"{key}_page", 0))
-    page = min(page, n_pages - 1)
+    page = int(st.session_state[page_key])
+    page = max(0, min(page, n_pages - 1))  # clamp if filters reduced pages
+    st.session_state[page_key] = page
+    st.session_state[jump_key] = page + 1  # keep number_input in sync
 
-    # slice + Rank
     start, end = page * page_size, min((page + 1) * page_size, n_rows)
+
+    # ---- slice + Rank ----
     slice_df = df.iloc[start:end].copy()
     slice_df.insert(0, "Rank", np.arange(start + 1, end + 1))
     base_cols = ["Rank", "Player", "Team", "Pos", "G", "MP", "DIS"]
     visible = [c for c in base_cols if c in slice_df.columns]
     slice_df = slice_df[visible]
 
-    # table
+    # ---- table (fast HTML, no nested scroll) ----
     st.markdown(_slice_to_html(slice_df), unsafe_allow_html=True)
 
-    # ── BOTTOM: left info, right pagination row (Prev • numbers • Next • Jump) ─
+    # ---- FOOTER: left info, right controls in one row ----
     bottom = st.columns([6, 6])
-
     with bottom[0]:
         st.caption(f"{start + 1} to {end} of {n_rows:,}")
 
     with bottom[1]:
-        # one horizontal row
-        prev_col, jump_col, next_col = st.columns([2, 5, 2])
+        prev_col, nums_col, next_col, jump_col = st.columns([1.2, 6, 1.2, 1.8])
 
         with prev_col:
-            if st.button("◀ Prev", use_container_width=True, disabled=(page == 0),
-                         key=f"{key}_prev"):
-                page = max(0, page - 1)
+            st.button(
+                "◀ Prev", use_container_width=True,
+                disabled=(page == 0),
+                on_click=_set_page, args=(key, n_pages),
+                kwargs={"delta": -1},
+                key=f"{key}_prev_btn",
+            )
+
+        with nums_col:
+            nums = _page_window(page + 1, n_pages, window=7)
+            num_cols = st.columns(len(nums)) if nums else []
+            for i, pnum in enumerate(nums):
+                active = (pnum == page + 1)
+                label = f"**{pnum}**" if active else f"{pnum}"
+                num_cols[i].button(
+                    label, use_container_width=True,
+                    on_click=_set_page, args=(key, n_pages),
+                    kwargs={"set_to": pnum - 1},
+                    key=f"{key}_p{pnum}",
+                )
 
         with next_col:
-            if st.button("Next ▶", use_container_width=True,
-                         disabled=(page >= n_pages - 1),
-                         key=f"{key}_next"):
-                page = min(n_pages - 1, page + 1)
+            st.button(
+                "Next ▶", use_container_width=True,
+                disabled=(page >= n_pages - 1),
+                on_click=_set_page, args=(key, n_pages),
+                kwargs={"delta": +1},
+                key=f"{key}_next_btn",
+            )
 
         with jump_col:
-            # compact "Jump to page" control
-            chosen = st.number_input(
-                "Page", min_value=1, max_value=n_pages, value=page + 1, step=1,
-                key=f"{key}_jump"
+            st.number_input(
+                "Page", min_value=1, max_value=n_pages, step=1,
+                key=jump_key, on_change=_jump_changed, args=(key, n_pages),
             )
-            if int(chosen) - 1 != page:
-                page = int(chosen) - 1
-
-    # reset page when page size changes; persist state
-    prev_ps = st.session_state.get(f"{key}_ps_prev", None)
-    if prev_ps is None or prev_ps != page_size:
-        page = 0
-    st.session_state[f"{key}_ps_prev"] = page_size
-    st.session_state[f"{key}_page"] = page
 
 def _dis_category(dis: float):
     for lo, hi, name, color in BINS:
