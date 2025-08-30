@@ -119,7 +119,7 @@ def _page_window(current: int, total: int, window: int = 7) -> list[int]:
 
 # ----- Callbacks (single source of truth) -----
 def _set_page(key: str, n_pages: int, set_to: int | None = None, delta: int | None = None):
-    """Update the page in session_state with proper clamping."""
+    """Single source of truth: update page in session_state (0-based)."""
     page_key = f"{key}_page"
     page = int(st.session_state.get(page_key, 0))
     if set_to is not None:
@@ -127,20 +127,18 @@ def _set_page(key: str, n_pages: int, set_to: int | None = None, delta: int | No
     elif delta is not None:
         page = page + int(delta)
     page = max(0, min(page, n_pages - 1))
-    st.session_state[page_key] = page
-    # keep the jump input in sync (1-based)
-    st.session_state[f"{key}_jump_val"] = page + 1
+    st.session_state[page_key] = page  # <-- do NOT touch jump here
 
 def _jump_changed(key: str, n_pages: int):
-    """Callback when the jump number_input changes."""
-    val = int(st.session_state.get(f"{key}_jump_val", 1))
+    """When the jump number_input changes, set page accordingly."""
+    jump_key = f"{key}_jump_val"
+    val = int(st.session_state.get(jump_key, 1))
     val = max(1, min(val, n_pages))
     _set_page(key, n_pages, set_to=val - 1)
 
 def _ps_changed(key: str):
-    """Callback when page size changes: reset to first page."""
+    """When rows-per-page changes, reset to first page."""
     st.session_state[f"{key}_page"] = 0
-    # jump value will be synced on next render
 
 def render_leaderboard(df: pd.DataFrame, key: str = "lb",
                        page_size_options=(10, 25, 50, 100),
@@ -150,49 +148,50 @@ def render_leaderboard(df: pd.DataFrame, key: str = "lb",
     Stable, mobile-friendly leaderboard:
       - 'per page' selector (top-left)
       - Rank column (global)
-      - One-row footer: Prev • 1 2 3 … • Next • Page [jump]
+      - Footer row: Prev • Next • Page [jump]
       - Pagination controlled via callbacks (no double-advance)
     """
-
-    # ---- sort once (defines Rank across the whole table) ----
+    # Sort once (defines Rank)
     if sort_by in df.columns:
         df = df.sort_values(sort_by, ascending=not descending).reset_index(drop=True)
 
-    # ---- init session keys ----
+    # ---- keys ----
     page_key = f"{key}_page"
-    ps_key = f"{key}_ps"
+    ps_key   = f"{key}_ps"
     jump_key = f"{key}_jump_val"
+
+    # init only page (do NOT pre-seed ps/jump)
     if page_key not in st.session_state:
         st.session_state[page_key] = 0
-    if ps_key not in st.session_state:
-        st.session_state[ps_key] = default_page_size
-    if jump_key not in st.session_state:
-        st.session_state[jump_key] = 1
 
     # ---- TOP: rows-per-page selector ----
     top = st.columns([2, 8])
     with top[0]:
+        current_ps = st.session_state.get(ps_key, default_page_size)
+        try:
+            idx = page_size_options.index(current_ps)
+        except ValueError:
+            idx = page_size_options.index(default_page_size)
+
         st.selectbox(
             "per page",
             page_size_options,
-            index=(page_size_options.index(st.session_state[ps_key])
-                   if st.session_state[ps_key] in page_size_options else 1),
-            key=ps_key,
-            on_change=_ps_changed,
+            index=idx,                # widget provides default
+            key=ps_key,               # widget owns its value
+            on_change=_ps_changed,    # reset to page 0
             args=(key,),
         )
     with top[1]:
         st.write("")
 
-    page_size = int(st.session_state[ps_key])
+    page_size = int(st.session_state.get(ps_key, page_size_options[idx]))
 
-    # ---- compute pagination ----
-    n_rows = len(df)
+    # ---- pagination math ----
+    n_rows  = len(df)
     n_pages = max(1, math.ceil(n_rows / page_size))
-    page = int(st.session_state[page_key])
-    page = max(0, min(page, n_pages - 1))  # clamp if filters reduced pages
+    page    = int(st.session_state.get(page_key, 0))
+    page    = max(0, min(page, n_pages - 1))
     st.session_state[page_key] = page
-    st.session_state[jump_key] = page + 1  # keep number_input in sync
 
     start, end = page * page_size, min((page + 1) * page_size, n_rows)
 
@@ -206,13 +205,13 @@ def render_leaderboard(df: pd.DataFrame, key: str = "lb",
     # ---- table (fast HTML, no nested scroll) ----
     st.markdown(_slice_to_html(slice_df), unsafe_allow_html=True)
 
-    # ---- FOOTER: left info, right controls in one row ----
+    # ---- FOOTER: info left, controls right (Prev • Next • Page [jump]) ----
     bottom = st.columns([6, 6])
     with bottom[0]:
         st.caption(f"{start + 1} to {end} of {n_rows:,}")
 
     with bottom[1]:
-        prev_col, nums_col, next_col, jump_col = st.columns([1.2, 6, 1.2, 1.8])
+        prev_col, jump_col, next_col = st.columns([2, 3, 2])
 
         with prev_col:
             st.button(
@@ -222,19 +221,6 @@ def render_leaderboard(df: pd.DataFrame, key: str = "lb",
                 kwargs={"delta": -1},
                 key=f"{key}_prev_btn",
             )
-
-        with nums_col:
-            nums = _page_window(page + 1, n_pages, window=7)
-            num_cols = st.columns(len(nums)) if nums else []
-            for i, pnum in enumerate(nums):
-                active = (pnum == page + 1)
-                label = f"**{pnum}**" if active else f"{pnum}"
-                num_cols[i].button(
-                    label, use_container_width=True,
-                    on_click=_set_page, args=(key, n_pages),
-                    kwargs={"set_to": pnum - 1},
-                    key=f"{key}_p{pnum}",
-                )
 
         with next_col:
             st.button(
@@ -247,8 +233,12 @@ def render_leaderboard(df: pd.DataFrame, key: str = "lb",
 
         with jump_col:
             st.number_input(
-                "Page", min_value=1, max_value=n_pages, step=1,
-                key=jump_key, on_change=_jump_changed, args=(key, n_pages),
+                "Page",
+                min_value=1, max_value=n_pages, step=1,
+                value=page + 1,            # <- supply the current value here
+                key=jump_key,
+                on_change=_jump_changed,   # <- callback sets page
+                args=(key, n_pages),
             )
 
 def _dis_category(dis: float):
