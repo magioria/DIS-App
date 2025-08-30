@@ -438,9 +438,9 @@ elif page == "Leaderboard":
         if result.empty:
             st.warning("Player not found.")
         else:
-            result_tbl = result[columns_to_display].reset_index(drop=True)
+            result_tbl = result[columns_to_display].reset_index(drop=True).copy()
             result_tbl.insert(0, "Rank", np.arange(1, len(result_tbl) + 1))
-            st.markdown(style_table(result_tbl), unsafe_allow_html=True)
+            st.markdown(_slice_to_html(result_tbl), unsafe_allow_html=True)
 
 
         if len(result) == 1:
@@ -460,10 +460,9 @@ elif page == "Leaderboard":
                 player_hist = player_hist.sort_values("Season", key=lambda s: s.map(season_order_key))
                 st.subheader(f"{player_name} — DIS History")
                 st.line_chart(player_hist.set_index("Season")["DIS"])
-                hist_tbl = (
-                player_hist[["Season","Team","Pos","G","MP","DIS"]].reset_index(drop=True))
+                hist_tbl = player_hist[["Season","Team","Pos","G","MP","DIS"]].reset_index(drop=True).copy()
                 hist_tbl.insert(0, "Rank", np.arange(1, len(hist_tbl) + 1))
-                st.markdown(style_table(hist_tbl), unsafe_allow_html=True)
+                st.markdown(_slice_to_html(hist_tbl), unsafe_allow_html=True)
 
                 # ✅ Average DIS across all seasons this player actually played
                 avg_dis_pl = round(player_hist["DIS"].astype(float).mean(), 2)
@@ -484,7 +483,7 @@ elif page == "Leaderboard":
         st.subheader("Player Comparison")
         tbl = comparison_df[columns_to_display].reset_index(drop=True).copy()
         tbl.insert(0, "Rank", np.arange(1, len(tbl) + 1))
-        st.markdown(style_table(tbl), unsafe_allow_html=True)
+        st.markdown(_slice_to_html(tbl), unsafe_allow_html=True)
 
         # Bar chart
         st.subheader("DIS Comparison Chart")
