@@ -438,9 +438,9 @@ elif page == "Leaderboard":
         if result.empty:
             st.warning("Player not found.")
         else:
-            tbl = result[columns_to_display].reset_index(drop=True)
-            tbl.insert(0, "Rank", np.arange(1, len(tbl) + 1))
-            st.markdown(style_table(tbl), unsafe_allow_html=True)
+            result_tbl = result[columns_to_display].reset_index(drop=True)
+            result_tbl.insert(0, "Rank", np.arange(1, len(result_tbl) + 1))
+            st.markdown(style_table(result_tbl), unsafe_allow_html=True)
 
 
         if len(result) == 1:
@@ -460,13 +460,11 @@ elif page == "Leaderboard":
                 player_hist = player_hist.sort_values("Season", key=lambda s: s.map(season_order_key))
                 st.subheader(f"{player_name} — DIS History")
                 st.line_chart(player_hist.set_index("Season")["DIS"])
-                st.dataframe(
-                    style_table(
-                    player_hist[["Season","Team","Pos","G","MP","DIS"]]
-                    .reset_index(drop=True)
-                    .rename(index=lambda x: x + 1)),
-                    use_container_width=True
-                )
+                hist_tbl = (
+                player_hist[["Season","Team","Pos","G","MP","DIS"]].reset_index(drop=True))
+                hist_tbl.insert(0, "Rank", np.arange(1, len(hist_tbl) + 1))
+                st.markdown(style_table(hist_tbl), unsafe_allow_html=True)
+
                 # ✅ Average DIS across all seasons this player actually played
                 avg_dis_pl = round(player_hist["DIS"].astype(float).mean(), 2)
                 st.markdown(f"**Average DIS for {player_name}:** {avg_dis_pl}")
@@ -484,7 +482,9 @@ elif page == "Leaderboard":
     elif players_to_compare:
         comparison_df = filtered_df[filtered_df["Player"].isin(players_to_compare)]
         st.subheader("Player Comparison")
-        st.dataframe(style_table(comparison_df[columns_to_display]), use_container_width=True)
+        tbl = comparison_df[columns_to_display].reset_index(drop=True).copy()
+        tbl.insert(0, "Rank", np.arange(1, len(tbl) + 1))
+        st.markdown(style_table(tbl), unsafe_allow_html=True)
 
         # Bar chart
         st.subheader("DIS Comparison Chart")
@@ -533,7 +533,8 @@ elif page == "Leaderboard":
                 avg_pos_dis = round(df[df["Pos"] == pos]["DIS"].mean(), 2)
                 avg_pos_filt_dis = round(pos_df["DIS"].mean(), 2)
                 with st.expander(f"Top 10 {pos}s"):
-                    st.dataframe(style_table(top10), use_container_width=True)
+                    top10_tbl = top10  # keep the Rank + columns you already built
+                    st.markdown(_slice_to_html(top10_tbl), unsafe_allow_html=True)
                     st.markdown(f"**Average DIS for all {pos}s:** {avg_pos_dis}")
                     st.markdown(f"**Average DIS for all {pos}s (only filtered players):** {avg_pos_filt_dis}")
 
