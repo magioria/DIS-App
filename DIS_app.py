@@ -68,26 +68,43 @@ def plot_dis_scale_with_steps():
     fig.tight_layout()
     return fig
 
-def style_table(df: pd.DataFrame):
-    styler = df.style
-    try:
-        styler = styler.hide(axis="index")
-    except Exception:
-        styler = styler.hide_index()
+def style_table(df: pd.DataFrame) -> str:
+    """Return HTML for a table where DIS cells are full-width colored pills."""
+    BINS = [
+        (-18, -5,  "#c62828"),  # red
+        (-5,   0,  "#ef6c00"),  # orange
+        (0,    7,  "#fdd835"),  # yellow
+        (7,   13,  "#9ccc65"),  # light green
+        (13,  20,  "#43a047"),  # green
+        (20,  35,  "#1b5e20"),  # dark green
+    ]
 
-    def dis_color(val: float) -> str:
-        for low, high, _, color in BINS:
-            if low <= val < high:
-                txt = "white" if color not in ("#fdd835",) else "black"
-                return f"background-color: {color}; color: {txt}; font-weight: 600;"
-        return ""
-
-    if "DIS" in df.columns:
-        styler = styler.apply(
-            lambda s: [dis_color(v) for v in s] if s.name == "DIS" else ["" for _ in s],
-            axis=0,
+    def dis_pill(v: float) -> str:
+        color = "#e0e0e0"; txt = "black"
+        for lo, hi, col in BINS:
+            if lo <= v < hi:
+                color = col
+                txt = "black" if col == "#fdd835" else "white"
+                break
+        # Full-width pill
+        return (
+            f"<div style='width:100%; display:block; box-sizing:border-box; "
+            f"background:{color}; color:{txt}; font-weight:600; "
+            f"padding:4px 10px; border-radius:8px; text-align:right'>{v:.6f}</div>"
         )
-    return styler
+
+    # Render as HTML; use formatter only for DIS
+    html = df.to_html(index=False, escape=False,
+                      formatters={"DIS": dis_pill})
+
+    # Small CSS to make table span container and align nicely
+    css = """
+    <style>
+      table { width:100% !important; border-collapse:separate; border-spacing:0 6px; }
+      th, td { padding:6px 8px; vertical-align:middle; }
+    </style>
+    """
+    return css + html
 
 def _dis_cell_html(v: float) -> str:
     """Return HTML for a colored DIS cell (fast, no Styler)."""
@@ -421,7 +438,10 @@ elif page == "Leaderboard":
         if result.empty:
             st.warning("Player not found.")
         else:
-            st.dataframe(style_table(result[columns_to_display].rename_axis("Rank")), use_container_width=True)
+            tbl = result[columns_to_display].reset_index(drop=True)
+            tbl.insert(0, "Rank", np.arange(1, len(tbl) + 1))
+            st.markdown(style_table(tbl), unsafe_allow_html=True)
+
 
         if len(result) == 1:
             player_row = result.iloc[0]
@@ -504,7 +524,7 @@ elif page == "Leaderboard":
             pos_df = filtered_df[filtered_df["Pos"] == pos].sort_values(by="DIS", ascending=False)
             if not pos_df.empty:
                 top10 = (
-                    pos_df[["Player","Team","MP","DIS"]]
+                    pos_df[["Player","Team","G", "MP","DIS"]]
                     .head(10)
                     .reset_index(drop=True)
                     .rename_axis("Rank")
