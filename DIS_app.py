@@ -395,6 +395,9 @@ elif page == "Leaderboard":
     columns_to_display = ["Player", "Team", "Pos", "G", "MP", "DIS"]
     df_display = df.copy()
 
+    # Player search
+    player = st.sidebar.text_input("🔍 Search a Player to view full Profile & History")
+    
     # Games filter
     min_games = st.sidebar.slider("Minimum Games Played", min_value=1, max_value=int(df_display["G"].max()), value=1, step=1)
 
@@ -425,9 +428,6 @@ elif page == "Leaderboard":
         filtered_df = filtered_df[filtered_df["Pos"] == selected_pos]
     filtered_df = filtered_df[filtered_df["MP"] >= min_mp]
     filtered_df = filtered_df[filtered_df["G"] >= min_games]
-
-    # Player search
-    player = st.sidebar.text_input("Search for a player")
 
     # Compare multiple players
     player_options = filtered_df["Player"].unique()
