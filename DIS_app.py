@@ -461,7 +461,6 @@ elif page == "Leaderboard":
                 st.subheader(f"{player_name} — DIS History")
                 st.line_chart(player_hist.set_index("Season")["DIS"])
                 hist_tbl = player_hist[["Season","Team","Pos","G","MP","DIS"]].reset_index(drop=True).copy()
-                hist_tbl.insert(0, "Rank", np.arange(1, len(hist_tbl) + 1))
                 st.markdown(_slice_to_html(hist_tbl), unsafe_allow_html=True)
 
                 # ✅ Average DIS across all seasons this player actually played
