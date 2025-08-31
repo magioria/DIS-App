@@ -482,7 +482,7 @@ elif page == "Leaderboard":
         comparison_df = filtered_df[filtered_df["Player"].isin(players_to_compare)]
         st.subheader("Player Comparison")
         tbl = comparison_df[columns_to_display].reset_index(drop=True).copy()
-        tbl.insert(0, "Rank", np.arange(1, len(tbl) + 1))
+        tbl.insert(0, "Rank", tbl["DIS"].apply(lambda x: int((df["DIS"] > x).sum() + 1)))
         st.markdown(_slice_to_html(tbl), unsafe_allow_html=True)
 
         # Bar chart
