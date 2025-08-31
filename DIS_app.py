@@ -527,13 +527,12 @@ elif page == "Leaderboard":
                     .head(10)
                     .reset_index(drop=True)
                     .rename_axis("Rank")
-                    .rename(index=lambda x: x + 1)
-                )
+                    .rename(index=lambda x: x + 1))
+                top10.insert(0, "Rank", np.arange(1, len(top10) + 1))
                 avg_pos_dis = round(df[df["Pos"] == pos]["DIS"].mean(), 2)
                 avg_pos_filt_dis = round(pos_df["DIS"].mean(), 2)
                 with st.expander(f"Top 10 {pos}s"):
-                    top10_tbl = top10  # keep the Rank + columns you already built
-                    st.markdown(_slice_to_html(top10_tbl), unsafe_allow_html=True)
+                    st.markdown(_slice_to_html(top10), unsafe_allow_html=True)
                     st.markdown(f"**Average DIS for all {pos}s:** {avg_pos_dis}")
                     st.markdown(f"**Average DIS for all {pos}s (only filtered players):** {avg_pos_filt_dis}")
 
