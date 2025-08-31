@@ -439,7 +439,8 @@ elif page == "Leaderboard":
             st.warning("Player not found.")
         else:
             result_tbl = result[columns_to_display].reset_index(drop=True).copy()
-            result_tbl.insert(0, "Rank", np.arange(1, len(result_tbl) + 1))
+            # compute global rank for each player row based on their DIS value
+            result_tbl.insert(0,"Rank", result_tbl["DIS"].apply(lambda x: int((df["DIS"] > x).sum() + 1)))
             st.markdown(_slice_to_html(result_tbl), unsafe_allow_html=True)
 
 
