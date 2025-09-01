@@ -415,15 +415,13 @@ if page == "What is DIS?":
     """)
                 
     st.markdown("""
-    ### How reliable is DIS?
+    ### How reliable is DIS?  
+    To test the credibility of DIS, we compared **all Defensive Player of the Year nominees** and **All-Defensive Team selections** with the **Top 20 DIS players** from each season.  
 
-    To test the credibility of DIS, we compared the **Top 20 DIS players each season** with the official **All-Defensive Teams** and **Defensive Player of the Year nominees**.  
+    - ✅ **72%** of the time, those official award players were also Top 20 in DIS, confirming strong alignment.  
+    - ❌ **28%** of the time, official selections had a lower DIS than expected — while higher-DIS players were overlooked.  
 
-    - ✅ **60%** of the time, DIS perfectly matched the official awards selections.  
-    - ⚪ **12%** were good matches (players recognized as strong defenders but not officially awarded).  
-    - ❌ **28%** were mismatches (strong DIS players overlooked in awards).  
-
-    This validation shows that DIS aligns strongly with how defense is recognized in the NBA, while also highlighting **underrated defenders** who might not receive enough media or voting attention.
+    This validation shows that DIS is highly consistent with how defense is recognized in the NBA, while also uncovering **underrated defenders** who may not receive the same level of media coverage or voting recognition. 
     """)
 
 elif page == "Leaderboard":
