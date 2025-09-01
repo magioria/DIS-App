@@ -126,17 +126,8 @@ def _slice_to_html(df_slice: pd.DataFrame) -> str:
         formatters={"DIS": _dis_cell_html}
     )
 
-    # Inline tweaks (no <style> block → avoids the 'code box' issue)
-    html = html.replace(
-        "<table",
-        "<table style='width:100%!important; border-collapse:separate; border-spacing:0 6px;'"
-    ).replace(
-        "<th",
-        "<th style='text-align:left; padding:6px 8px;'"
-    ).replace(
-        "<td",
-        "<td style='padding:6px 8px;'"
-    )
+    # Only adjust headers, leave table style intact
+    html = html.replace("<th>", "<th style='text-align:left;'>")
 
     return html
 
