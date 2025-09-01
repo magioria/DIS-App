@@ -120,13 +120,17 @@ def _dis_cell_html(v: float) -> str:
 @st.cache_data(ttl=120)
 def _slice_to_html(df_slice: pd.DataFrame) -> str:
     """Cache the HTML of a page slice to improve paging speed."""
-    html = df_slice.to_html(index=False, escape=False,
-                            formatters={"DIS": _dis_cell_html})
+    html = df_slice.to_html(
+        index=False,
+        escape=False,
+        formatters={"DIS": _dis_cell_html}
+    )
 
     css = """
     <style>
-      table{width:100%!important}
-      th { text-align:left !important; }  /* <-- left-align column titles */
+      table { width:100%!important; border-collapse:separate; border-spacing:0 6px; }
+      th { text-align:left !important; padding:6px 8px; }
+      td { padding:6px 8px; }
     </style>
     """
     return css + html
