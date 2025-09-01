@@ -122,7 +122,14 @@ def _slice_to_html(df_slice: pd.DataFrame) -> str:
     """Cache the HTML of a page slice to improve paging speed."""
     html = df_slice.to_html(index=False, escape=False,
                             formatters={"DIS": _dis_cell_html})
-    return "<style>table{width:100%!important}</style>" + html
+
+    css = """
+    <style>
+      table{width:100%!important}
+      th { text-align:left !important; }  /* <-- left-align column titles */
+    </style>
+    """
+    return css + html
 
 # ----- Callbacks (single source of truth) -----
 def _set_page(key: str, n_pages: int, set_to: int | None = None, delta: int | None = None):
@@ -396,7 +403,7 @@ elif page == "Leaderboard":
     df_display = df.copy()
 
     # Player search
-    player = st.sidebar.text_input("🔍 Search a Player to view full Profile & History")
+    player = st.sidebar.text_input("🔍 **Search a Player to view full Profile & History**")
     
     # Games filter
     min_games = st.sidebar.slider("Minimum Games Played", min_value=1, max_value=int(df_display["G"].max()), value=1, step=1)
