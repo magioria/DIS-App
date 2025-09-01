@@ -266,7 +266,11 @@ def render_leaderboard(df: pd.DataFrame, key: str = "lb",
 def _dis_category(dis: float):
     for lo, hi, name, color in BINS:
         if lo <= dis < hi:
-            txt = "black" if color == "#fdd835" else "white"
+            # Always black for yellow shades (Solid + Average)
+            if color in ("#fdd835", "#ffef8a"):
+                txt = "black"
+            else:
+                txt = "white"
             return name, color, txt
     return "—", "#e0e0e0", "black"
 
