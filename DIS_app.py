@@ -39,7 +39,7 @@ def season_order_key(s: str):
 BINS = [
     (-18, -5,  "Poor Defender",          "#c62828"),  # red
     (-5,   0,  "Below Average",          "#ef6c00"),  # orange
-    (0,    3,  "Average Defender",       "#ffef8a"),  # light yellow
+    (0,    3,  "Average Defender",       "#ffd54f"),  # golden yellow (better contrast)
     (3,    7,  "Solid Contributor",      "#fdd835"),  # yellow
     (7,   13,  "Strong Defender",        "#9ccc65"),  # light green
     (13,  20,  "Elite Defender",         "#43a047"),  # green
@@ -71,13 +71,13 @@ def plot_dis_scale_with_steps():
 def style_table(df: pd.DataFrame) -> str:
     """Return HTML for a table where DIS cells are full-width colored pills."""
     BINS = [
-        (-18, -5,  "#c62828"),  # red
-        (-5,   0,  "#ef6c00"),  # orange
-        (0,    3,  "#ffef8a"),  # light yellow (Average)
-        (3,    7,  "#fdd835"),  # yellow       (Solid)
-        (7,   13,  "#9ccc65"),  # light green
-        (13,  20,  "#43a047"),  # green
-        (20,  35,  "#1b5e20"),  # dark green
+        (-18, -5,  "#c62828"),
+        (-5,   0,  "#ef6c00"),
+        (0,    3,  "#ffd54f"),  # Average
+        (3,    7,  "#fdd835"),  # Solid
+        (7,   13,  "#9ccc65"),
+        (13,  20,  "#43a047"),
+        (20,  35,  "#1b5e20"),
     ]
 
     def dis_pill(v: float) -> str:
@@ -276,7 +276,7 @@ def _pct_color(pct: float) -> str:
     elif pct < 40:
         return "#ef6c00"   # orange (Below Avg)
     elif pct < 55:
-        return "#ffef8a"   # light yellow (Average)
+        return "#ffd54f"   # golden yellow (Average)
     elif pct < 70:
         return "#fdd835"   # yellow (Solid)
     elif pct < 85:
