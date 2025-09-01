@@ -458,6 +458,20 @@ elif page == "Leaderboard":
     *Keep this in mind if you want to filter for the eligible players ;)*
     """)
 
+    top_n = st.sidebar.selectbox(
+        "Top N by DIS",
+        options=[10, 20, 25, 30, 50, 100],
+        index=1  # default = Top 20
+    )
+
+    dis_min = st.sidebar.slider(
+        "Minimum DIS (threshold)",
+        min_value=float(df_display["DIS"].min()),
+        max_value=float(df_display["DIS"].max()),
+        value=0.0,  # default threshold at league average
+        step=0.1
+    )
+
     # Team filter
     teams = df_display["Team"].unique()
     selected_team = st.sidebar.selectbox("Filter by team", options=["All"] + sorted(teams))
@@ -474,6 +488,7 @@ elif page == "Leaderboard":
         filtered_df = filtered_df[filtered_df["Pos"] == selected_pos]
     filtered_df = filtered_df[filtered_df["MP"] >= min_mp]
     filtered_df = filtered_df[filtered_df["G"] >= min_games]
+    filtered_df = filtered_df[filtered_df["DIS"] >= dis_min]
 
     # Compare multiple players
     player_options = filtered_df["Player"].unique()
@@ -549,8 +564,12 @@ elif page == "Leaderboard":
         if filtered_df.empty:
             st.warning("No players match the selected filters.")
         else:
+            # --- NEW: apply Top N only to the main leaderboard view
+            lb_df = filtered_df.sort_values("DIS", ascending=False)
+            if len(lb_df) > top_n:
+                lb_df = lb_df.head(top_n)
             st.subheader(f"Top Defensive Players — {selected_season} Season")
-            render_leaderboard(filtered_df, key="main_lb",
+            render_leaderboard(lb_df, key="main_lb",
                    page_size_options=(10,25,50,100),
                    default_page_size=25,
                    sort_by="DIS", descending=True)
