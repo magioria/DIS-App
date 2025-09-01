@@ -39,7 +39,7 @@ def season_order_key(s: str):
 BINS = [
     (-18, -5,  "Poor Defender",          "#c62828"),  # red
     (-5,   0,  "Below Average",          "#ef6c00"),  # orange
-    (0,    3,  "Average Defender",       "#ffd54f"),  # golden yellow (better contrast)
+    (0,    3,  "Average Defender",       "#ffef8a"),  # light yellow
     (3,    7,  "Solid Contributor",      "#fdd835"),  # yellow
     (7,   13,  "Strong Defender",        "#9ccc65"),  # light green
     (13,  20,  "Elite Defender",         "#43a047"),  # green
@@ -71,13 +71,13 @@ def plot_dis_scale_with_steps():
 def style_table(df: pd.DataFrame) -> str:
     """Return HTML for a table where DIS cells are full-width colored pills."""
     BINS = [
-        (-18, -5,  "#c62828"),
-        (-5,   0,  "#ef6c00"),
-        (0,    3,  "#ffd54f"),  # Average
-        (3,    7,  "#fdd835"),  # Solid
-        (7,   13,  "#9ccc65"),
-        (13,  20,  "#43a047"),
-        (20,  35,  "#1b5e20"),
+        (-18, -5,  "#c62828"),  # red
+        (-5,   0,  "#ef6c00"),  # orange
+        (0,    3,  "#ffef8a"),  # light yellow (Average)
+        (3,    7,  "#fdd835"),  # yellow       (Solid)
+        (7,   13,  "#9ccc65"),  # light green
+        (13,  20,  "#43a047"),  # green
+        (20,  35,  "#1b5e20"),  # dark green
     ]
 
     def dis_pill(v: float) -> str:
@@ -85,9 +85,12 @@ def style_table(df: pd.DataFrame) -> str:
         for lo, hi, col in BINS:
             if lo <= v < hi:
                 color = col
-                txt = "black" if col == "#fdd835" else "white"
+                # Always black text for yellows (Average + Solid)
+                if col in ("#fdd835", "#ffef8a"):
+                    txt = "black"
+                else:
+                    txt = "white"
                 break
-        # Full-width pill
         return (
             f"<div style='width:100%; display:block; box-sizing:border-box; "
             f"background:{color}; color:{txt}; font-weight:600; "
@@ -113,7 +116,11 @@ def _dis_cell_html(v: float) -> str:
     for lo, hi, _, col in BINS:
         if lo <= v < hi:
             color = col
-            txt = "black" if col == "#fdd835" else "white"
+            # Always black text for yellows (Average + Solid)
+            if col in ("#fdd835", "#ffef8a"):
+                txt = "black"
+            else:
+                txt = "white"
             break
     return (f"<div style='background:{color};color:{txt};font-weight:600;"
             f"padding:2px 8px;border-radius:6px;text-align:right'>{v:.6f}</div>")
@@ -270,21 +277,24 @@ def _percentile_of_value(series: pd.Series, value: float) -> float:
     return float((arr <= value).mean() * 100.0)
 
 def _pct_color(pct: float) -> str:
-    """Return color based on percentile, aligned with DIS categories."""
-    if pct < 20:
-        return "#c62828"   # red (Poor)
-    elif pct < 40:
-        return "#ef6c00"   # orange (Below Avg)
-    elif pct < 55:
-        return "#ffd54f"   # golden yellow (Average)
-    elif pct < 70:
-        return "#fdd835"   # yellow (Solid)
-    elif pct < 85:
-        return "#9ccc65"   # light green (Strong)
-    elif pct < 95:
-        return "#43a047"   # green (Elite)
+    """
+    Color by league percentile, matched to actual DIS distribution
+    (cumulative cutoffs from your data).
+    """
+    if pct < 24.0:
+        return "#c62828"   # Poor
+    elif pct < 56.0:
+        return "#ef6c00"   # Below Avg
+    elif pct < 71.0:
+        return "#ffef8a"   # Average
+    elif pct < 85.0:
+        return "#fdd835"   # Solid
+    elif pct < 95.5:
+        return "#9ccc65"   # Strong
+    elif pct < 99.3:
+        return "#43a047"   # Elite
     else:
-        return "#1b5e20"   # dark green (Generational / DPOY)
+        return "#1b5e20"   # Generational / DPOY
 
 def _pct_bar(label: str, pct: float):
     fig, ax = plt.subplots(figsize=(5.6, 0.5))
