@@ -48,23 +48,46 @@ BINS = [
 BOUNDARIES = [-18, -5, 0, 3, 7, 13, 20, 35]
 
 def plot_dis_scale_with_steps():
-    fig, ax = plt.subplots(figsize=(12, 2.6))
-    # Draw each colored band
+    fig, ax = plt.subplots(figsize=(12, 2.8))
+
+    # draw bands
     for low, high, name, color in BINS:
-        ax.barh(0, high - low, left=low, color=color, edgecolor="black", height=0.6)
-        ax.text((low + high) / 2, 0, name,
-                ha="center", va="center", fontsize=10,
-                color="black", fontweight="bold")
-    # Vertical dashed boundary lines with labels
+        ax.barh(0, high - low, left=low, color=color,
+                edgecolor="black", height=0.66)
+
+    # category labels — all black text, some on two lines
+    for low, high, name, color in BINS:
+        x = (low + high) / 2
+
+        if name == "Below Average":
+            label = "Below\nAverage"
+        elif name == "Average Defender":
+            label = "Average\nDefender"
+        elif name == "Solid Contributor":
+            label = "Solid\nContributor"
+        elif name == "Strong Defender":
+            label = "Strong\nDefender"
+        else:
+            label = name
+
+        ax.text(x, 0, label, ha="center", va="center",
+                fontsize=10, fontweight="bold", color="black")
+
+    # boundary ticks + numbers
     for x in BOUNDARIES:
-        ax.vlines(x, -0.5, 0.5, linestyles="dashed", linewidth=1.2, color="black")
-        ax.text(x, 0.55, f"{x:g}", ha="center", va="bottom", fontsize=10)
-    # Axis formatting
+        ax.vlines(x, -0.5, -0.08, color="black", linewidth=1)
+        ax.text(x, -0.65, f"{x:g}", ha="center", va="top", fontsize=9)
+
+    # cosmetics
     ax.set_xlim(min(BOUNDARIES), max(BOUNDARIES))
     ax.set_ylim(-0.8, 0.9)
     ax.set_yticks([])
     ax.set_xlabel("DIS")
-    ax.set_title("DIS Interpretation Scale (green = best, red = worst)", fontsize=12, fontweight="bold")
+    ax.set_title("DIS Interpretation Scale (green = best, red = worst)",
+                 fontsize=12, fontweight="bold")
+    for sp in ("top", "right", "left", "bottom"):
+        ax.spines[sp].set_visible(False)
+
     fig.tight_layout()
     return fig
 
