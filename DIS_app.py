@@ -126,14 +126,19 @@ def _slice_to_html(df_slice: pd.DataFrame) -> str:
         formatters={"DIS": _dis_cell_html}
     )
 
-    css = """
-    <style>
-      table { width:100%!important; border-collapse:separate; border-spacing:0 6px; }
-      th { text-align:left !important; padding:6px 8px; }
-      td { padding:6px 8px; }
-    </style>
-    """
-    return css + html
+    # Inline tweaks (no <style> block → avoids the 'code box' issue)
+    html = html.replace(
+        "<table",
+        "<table style='width:100%!important; border-collapse:separate; border-spacing:0 6px;'"
+    ).replace(
+        "<th",
+        "<th style='text-align:left; padding:6px 8px;'"
+    ).replace(
+        "<td",
+        "<td style='padding:6px 8px;'"
+    )
+
+    return html
 
 # ----- Callbacks (single source of truth) -----
 def _set_page(key: str, n_pages: int, set_to: int | None = None, delta: int | None = None):
