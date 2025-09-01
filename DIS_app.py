@@ -39,13 +39,13 @@ def season_order_key(s: str):
 BINS = [
     (-18, -5,  "Poor Defender",          "#c62828"),  # red
     (-5,   0,  "Below Average",          "#ef6c00"),  # orange
-    (0,    7,  "Solid Contributor",      "#fdd835"),  # yellow
+    (0,    3,  "Average Defender",       "#ffef8a"),  # light yellow
+    (3,    7,  "Solid Contributor",      "#fdd835"),  # yellow
     (7,   13,  "Strong Defender",        "#9ccc65"),  # light green
     (13,  20,  "Elite Defender",         "#43a047"),  # green
     (20,  35,  "Generational / DPOY",    "#1b5e20"),  # dark green
 ]
-
-BOUNDARIES = [-18, -5, 0, 7, 13, 20, 35]
+BOUNDARIES = [-18, -5, 0, 3, 7, 13, 20, 35]
 
 def plot_dis_scale_with_steps():
     fig, ax = plt.subplots(figsize=(12, 2.6))
@@ -73,7 +73,8 @@ def style_table(df: pd.DataFrame) -> str:
     BINS = [
         (-18, -5,  "#c62828"),  # red
         (-5,   0,  "#ef6c00"),  # orange
-        (0,    7,  "#fdd835"),  # yellow
+        (0,    3,  "#ffef8a"),  # light yellow (Average)
+        (3,    7,  "#fdd835"),  # yellow       (Solid)
         (7,   13,  "#9ccc65"),  # light green
         (13,  20,  "#43a047"),  # green
         (20,  35,  "#1b5e20"),  # dark green
@@ -274,9 +275,11 @@ def _pct_color(pct: float) -> str:
         return "#c62828"   # red (Poor)
     elif pct < 40:
         return "#ef6c00"   # orange (Below Avg)
-    elif pct < 60:
+    elif pct < 55:
+        return "#ffef8a"   # light yellow (Average)
+    elif pct < 70:
         return "#fdd835"   # yellow (Solid)
-    elif pct < 80:
+    elif pct < 85:
         return "#9ccc65"   # light green (Strong)
     elif pct < 95:
         return "#43a047"   # green (Elite)
@@ -361,8 +364,9 @@ if page == "What is DIS?":
 
     - 20 or more → Generational / DPOY-level season
     - 13–19.9 → Elite Defender 
-    - 7–12.9 → Strong / Above-average defender
-    - 0–6.9 → Solid contributor (average to good defense, reliable)
+    - 7–12.9 → Strong defender
+    - 3–6.9 → Solid contributor
+    - 0–2.9 → Average defender
     - -5 to -0.1 → Below average (some defensive weaknesses)
     - Less than -5 → Poor Defender (significant negative impact)
     """)
