@@ -462,7 +462,7 @@ elif page == "Leaderboard":
         "Minimum DIS (threshold)",
         min_value=float(df_display["DIS"].min()),
         max_value=float(df_display["DIS"].max()),
-        value=0.0,  # default threshold at league average
+        value=float(df_display["DIS"].min()),  # default = minimum DIS
         step=0.1
     )
 
