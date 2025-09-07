@@ -2,10 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import streamlit as st
-import io
-import glob
 from pathlib import Path
-import re
 import math
 
 BASE_DIR = Path(__file__).parent
@@ -564,6 +561,11 @@ elif page == "Leaderboard":
         if filtered_df.empty:
             st.warning("No players match the selected filters.")
         else:
+            st.caption(
+                f"Filters • Season: {selected_season} • G ≥ {min_games} • "
+                f"MP ≥ {min_mp} • DIS ≥ {dis_min:.1f} "
+                + (f"• Team: {selected_team}" if selected_team != 'All' else "")
+                + (f" • Pos: {selected_pos}" if selected_pos != 'All' else ""))
             st.subheader(f"Top Defensive Players — {selected_season} Season")
             render_leaderboard(filtered_df, key="main_lb",
                    page_size_options=(10,25,50,100),
