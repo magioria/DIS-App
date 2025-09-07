@@ -392,9 +392,15 @@ if page == "What is DIS?":
     Unlike traditional defensive stats that rely heavily on steals, blocks, or team ratings, DIS blends multiple layers of data, including box score performance, matchup quality, and hustle stats, to assess how **consistently** and **effectively** a player influences defensive outcomes.
 
     DIS is designed to be **scale-consistent** across seasons, to evaluate players fairly regardless of their position, and to minimize the distortion caused by overall team performance, offering a robust tool for identifying both **elite** and **underrated defenders** who may not show up in highlight reels.
+    """)     
 
-    DIS Interpretation Scale (color legend for tables and charts):
+    st.divider()       
+    
+    st.header("**DIS Interpretation Scale**")
 
+    st.markdown("""
+    Values are standardized so that 0 = league average. Positive = better than average, negative = worse.
+                
     - 20 or more → Generational / DPOY-level season
     - 13–19.9 → Elite Defender 
     - 7–12.9 → Strong defender
@@ -406,12 +412,11 @@ if page == "What is DIS?":
 
     st.pyplot(plot_dis_scale_with_steps())
 
-    st.markdown("""
-    **Note**: DIS values are standardized so that 0 always represents the league average across the dataset. Positive values = better than average, negative = worse than average.            
-    """)
+    st.divider()
+
+    st.header("**How reliable is DIS?**")
                 
-    st.markdown("""
-    ### How reliable is DIS?  
+    st.markdown("""  
     To test the credibility of DIS, we compared **all Defensive Player of the Year nominees** and **All-Defensive Team selections** with the **Top 25 DIS players** from each season.  
 
     - ✅ **78%** of the time, those official award players were also Top 25 in DIS, confirming strong alignment.  
@@ -420,7 +425,24 @@ if page == "What is DIS?":
     This validation shows that DIS is highly consistent with how defense is recognized in the NBA, while also uncovering **underrated defenders** who may not receive the same level of media coverage or voting recognition. 
     
     To check its reliability, DIS was also compared with established defensive metrics like **D-LEBRON**, Defensive Win Shares (**DWS**), and Defensive Box Plus Minus (**DBPM**). 
-    The correlations are **strong**, meaning DIS captures many of the same defensive signals these trusted stats recognize. But the **differences** matter: DIS also highlights players whose defensive value isn’t fully reflected in box score production or plus-minus models, adding **new layers of insight** into the overall defensive impact.                       
+    The correlations are **strong**, meaning DIS captures many of the same defensive signals these trusted stats recognize. 
+                
+    But the **differences matter**: DIS also highlights players whose defensive value isn’t fully reflected in box score production or plus-minus models, adding **new layers of insight** into what makes a player impactful on defense.                       
+    """)
+
+    st.divider()
+
+    st.header("**Why it matters")
+    
+    st.markdown("""
+    DIS brings together the best parts of existing defensive stats while fixing their biggest weaknesses:
+
+    - More consistent than box score stats, because it looks beyond steals and blocks.
+    - More stable than plus-minus models, reducing noise from teammates and lineup context.
+    - More fair across positions, letting rim protectors, wings, and guards be compared on the same scale.
+    - Able to spot hidden gems, highlighting defenders who play key roles but often go unnoticed.
+
+    In short, DIS gives you a clearer, more complete picture of who really changes the game on defense.         
     """)
 
     st.divider()
