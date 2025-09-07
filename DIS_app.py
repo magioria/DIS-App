@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
 import streamlit as st
 import io
 import glob
@@ -449,6 +448,13 @@ elif page == "Leaderboard":
 
     # Minutes filter
     min_mp = st.sidebar.slider("Minimum Minutes Played", min_value=1, max_value=int(df_display["MP"].max()), value=1, step=50)
+
+    # --- NBA award eligibility toggle ---
+    eligible_only = st.sidebar.checkbox("Only show award-eligible players (NBA 65-game rule)", value=False)
+    if eligible_only:
+        # Approximate NBA requirement: 65 games & 1,300 total minutes
+        min_games = max(min_games, 65)
+        min_mp = max(min_mp, 1300)
 
     # 65-game rule note
     st.sidebar.markdown("""
