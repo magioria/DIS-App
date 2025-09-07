@@ -380,7 +380,7 @@ def show_player_profile(player_row: pd.Series, df_season: pd.DataFrame):
             title="League Distribution of DIS (player highlighted)"
         )
 
-page = st.sidebar.radio("Navigate", ["What is DIS?", "Leaderboard", "Correlation Analysis"])
+page = st.sidebar.radio("Navigate", ["What is DIS?", "Leaderboard"])
 
 if page == "What is DIS?":
     
@@ -415,18 +415,18 @@ if page == "What is DIS?":
     To test the credibility of DIS, we compared **all Defensive Player of the Year nominees** and **All-Defensive Team selections** with the **Top 25 DIS players** from each season.  
 
     - ✅ **78%** of the time, those official award players were also Top 25 in DIS, confirming strong alignment.  
-    - ❌ **22%** of the time, official selections had a lower DIS than expected — while higher-DIS players were overlooked.  
+    - ❌ **22%** of the time, official selections had a lower DIS than expected, while higher-DIS players were overlooked.  
 
     This validation shows that DIS is highly consistent with how defense is recognized in the NBA, while also uncovering **underrated defenders** who may not receive the same level of media coverage or voting recognition. 
     
-    To check its reliability, DIS was compared with established defensive metrics like **D-LEBRON**, Defensive Win Shares (**DWS**), and Defensive Box Plus Minus (**DBPM**). 
-    The correlations are **strong** — meaning DIS captures many of the same defensive signals these trusted stats recognize. But the **differences** matter: DIS also highlights players whose defensive value isn’t fully reflected in box score production or plus-minus models, adding **new layers of insight** into the overall defensive impact.                       
+    To check its reliability, DIS was also compared with established defensive metrics like **D-LEBRON**, Defensive Win Shares (**DWS**), and Defensive Box Plus Minus (**DBPM**). 
+    The correlations are **strong**, meaning DIS captures many of the same defensive signals these trusted stats recognize. But the **differences** matter: DIS also highlights players whose defensive value isn’t fully reflected in box score production or plus-minus models, adding **new layers of insight** into the overall defensive impact.                       
     """)
 
     st.divider()
 
     st.markdown("""
-    “Want to see how players rank by DIS? 👉 Check out the Leaderboard page to explore the top and bottom defenders.”             
+    Want to see how players rank by DIS? 👉 Check out the **Leaderboard** page to explore the top and bottom defenders.             
     """)
 
 elif page == "Leaderboard":
@@ -609,75 +609,3 @@ elif page == "Leaderboard":
                     st.markdown(_slice_to_html(top10), unsafe_allow_html=True)
                     st.markdown(f"**Average DIS for all {pos}s:** {avg_pos_dis}")
                     st.markdown(f"**Average DIS for all {pos}s (only filtered players):** {avg_pos_filt_dis}")
-
-elif page == "Correlation Analysis":
-
-    st.header("Correlation Analysis 📊— DIS vs Public Defensive Metrics")
-
-    st.markdown("""
-    Why Correlation Analysis?
-
-    The goal of this analysis is to test how well DIS aligns with established defensive metrics that are already used in public basketball analytics, like **D-LEBRON**, **DWS**(Defensive Win Shares) and **DBPM**(Defensive Box Plus Minus).
-
-    If DIS shows a strong positive correlation with these stats, it means it captures many of the same defensive signals that experts and analysts already trust — giving **credibility** and **statistical backing** to the metric.
-
-    At the same time, correlation is not expected to be perfect. DIS was designed to add **new layers of information** (like hustle data, matchup difficulty, contextual adjustments) that are not fully reflected in traditional metrics. So, where correlations are strong, DIS confirms its reliability; where they diverge, DIS provides **unique insights** into aspects of defense that are often overlooked.            
-    """)
-
-    # Add legend
-    fig, ax = plt.subplots(figsize=(5, 0.4))
-    cmap = plt.cm.get_cmap("RdBu_r")
-    norm = plt.Normalize(vmin=-1, vmax=1)
-    cb1 = plt.colorbar(
-        plt.cm.ScalarMappable(norm=norm, cmap=cmap),
-        cax=ax, orientation="horizontal")
-    cb1.set_label("Correlation strength (blue = negative, red = positive)")
-    st.pyplot(fig)
-
-    # Load dataset that contains DIS + advanced stats
-    df_corr = pd.read_csv(f"{CORRELATION_DIR}/dis_correlation_dataset.csv")
-
-    # Let the user select season
-    seasons = sorted(df_corr["Season"].unique(), reverse=True)
-    selected_season = st.selectbox("Select season", seasons)
-
-    season_df = df_corr[df_corr["Season"] == selected_season]
-
-    st.subheader(f"Correlations for {selected_season}")
-
-    # columns we care about
-    metrics = ["DIS", "D-LEBRON", "DWS", "DBPM"]
-    metrics = [c for c in metrics if c in season_df.columns]
-
-    # force numeric and drop non-numeric/NaN rows for corr
-    num_df = season_df[metrics].apply(pd.to_numeric, errors="coerce")
-
-    pearson_corr  = num_df.corr(method="pearson")
-    spearman_corr = num_df.corr(method="spearman")
-
-    # Function to style correlations with a color gradient
-    def style_corr(df):
-        return (df.style.background_gradient(cmap="RdBu_r", vmin=-1, vmax=1, axis=None).format("{:.2f}"))
-
-    st.write("**Pearson Correlation Matrix**")
-    st.markdown("""
-    Measures how strongly two variables move together in a straight-line (linear) way. Example: if DIS goes up when DWS goes up, that’s a high Pearson correlation.            
-    """)
-    st.dataframe(style_corr(pearson_corr))
-
-    st.write("**Spearman Correlation Matrix**")
-    st.markdown("""
-    Looks at the rank order instead of exact values. Example: it checks if higher DIS tends to come with higher (or lower) DWS, even if the relationship isn’t perfectly straight-line.            
-    """)
-    st.dataframe(style_corr(spearman_corr))
-
-    xvar = st.selectbox("X variable", [c for c in ["D-LEBRON", "DWS", "DBPM"] if c in num_df.columns])
-
-    if xvar:
-        plot_df = num_df[["DIS", xvar]].dropna()
-        fig, ax = plt.subplots()
-        ax.scatter(plot_df[xvar], plot_df["DIS"], alpha=0.6)
-        r = plot_df["DIS"].corr(plot_df[xvar], method="pearson")
-        ax.set_xlabel(xvar); ax.set_ylabel("DIS")
-        ax.set_title(f"{xvar} vs DIS (Pearson r = {r:.2f})")
-        st.pyplot(fig)
