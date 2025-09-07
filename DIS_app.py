@@ -444,7 +444,9 @@ elif page == "Leaderboard":
     min_games = st.sidebar.slider("Minimum Games Played", min_value=1, max_value=int(df_display["G"].max()), value=1, step=1)
 
     # Minutes filter
-    min_mp = st.sidebar.slider("Minimum Minutes Played", min_value=1, max_value=int(df_display["MP"].max()), value=1, step=50)
+    max_minutes = int(df_display["MP"].max())
+    minute_options = [1] + list(range(50, max_minutes + 1, 50))
+    min_mp = st.sidebar.select_slider("Minimum Minutes Played", options=minute_options, value=1)
 
     # --- NBA award eligibility toggle ---
     eligible_only = st.sidebar.checkbox("Only show award-eligible players (NBA 65-game rule)", value=False)
