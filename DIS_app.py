@@ -432,17 +432,17 @@ if page == "What is DIS?":
 
     st.divider()
 
-    st.header("**Why it matters")
+    st.header("**Why it matters**")
     
     st.markdown("""
     DIS brings together the best parts of existing defensive stats while fixing their biggest weaknesses:
 
-    - More consistent than box score stats, because it looks beyond steals and blocks.
-    - More stable than plus-minus models, reducing noise from teammates and lineup context.
-    - More fair across positions, letting rim protectors, wings, and guards be compared on the same scale.
-    - Able to spot hidden gems, highlighting defenders who play key roles but often go unnoticed.
+    - **More consistent** than box score stats, because it looks beyond steals and blocks.
+    - **More stable** than plus-minus models, reducing noise from teammates and lineup context.
+    - **More fair** across positions, letting rim protectors, wings, and guards be compared on the same scale.
+    - Able to spot **hidden gems**, highlighting defenders who play key roles but often go unnoticed.
 
-    In short, DIS gives you a clearer, more complete picture of who really changes the game on defense.         
+    In short, DIS gives you a clearer, more complete picture of **who really changes the game** on defense.         
     """)
 
     st.divider()
