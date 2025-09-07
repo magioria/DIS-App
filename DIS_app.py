@@ -419,10 +419,14 @@ if page == "What is DIS?":
 
     This validation shows that DIS is highly consistent with how defense is recognized in the NBA, while also uncovering **underrated defenders** who may not receive the same level of media coverage or voting recognition. 
     
-    “To check its reliability, DIS was compared with established defensive metrics like D-LEBRON, Defensive Win Shares (DWS), and Defensive Box Plus Minus (DBPM). 
-    The correlations are strong — meaning DIS captures many of the same defensive signals these trusted stats recognize. But the differences matter: DIS also highlights players whose defensive value isn’t fully reflected in box score production or plus-minus models, adding new layers of insight into the overall defensive impact.”            
-    
-    “Want to see how players rank by DIS? 👉 Check out the Leaderboard page to explore the top and bottom defenders.”            
+    To check its reliability, DIS was compared with established defensive metrics like **D-LEBRON**, Defensive Win Shares (**DWS**), and Defensive Box Plus Minus (**DBPM**). 
+    The correlations are **strong** — meaning DIS captures many of the same defensive signals these trusted stats recognize. But the **differences** matter: DIS also highlights players whose defensive value isn’t fully reflected in box score production or plus-minus models, adding **new layers of insight** into the overall defensive impact.                       
+    """)
+
+    st.divider()
+
+    st.markdown("""
+    “Want to see how players rank by DIS? 👉 Check out the Leaderboard page to explore the top and bottom defenders.”             
     """)
 
 elif page == "Leaderboard":
