@@ -565,7 +565,7 @@ elif page == "Leaderboard":
                 plt.xticks(rotation=45, ha="right")
                 plt.tight_layout()
                 st.pyplot(fig, use_container_width=True)
-                hist_tbl = player_hist[["Season","Team","Pos","G","MP","DIS"]].reset_index(drop=True).copy()
+                hist_tbl = (player_hist.sort_values("Season", ascending=False)[["Season", "Team", "Pos", "G", "MP", "DIS"]].reset_index(drop=True).copy())
                 st.markdown(_slice_to_html(hist_tbl), unsafe_allow_html=True)
 
                 # ✅ Average DIS across all seasons this player actually played
