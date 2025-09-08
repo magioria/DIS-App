@@ -551,7 +551,20 @@ elif page == "Leaderboard":
             if not player_hist.empty:
                 player_hist = player_hist.sort_values("Season", key=lambda s: s.map(season_order_key))
                 st.subheader(f"{player_name} — DIS History")
-                st.line_chart(player_hist.set_index("Season")["DIS"])
+                # Static (non-interactive) line plot
+                fig, ax = plt.subplots(figsize=(8, 3))
+                ax.plot(player_hist["Season"], player_hist["DIS"], marker="o", linewidth=2)
+
+                ax.set_xlabel("Season")
+                ax.set_ylabel("DIS")
+                ax.set_title("DIS over seasons", fontsize=11, fontweight="bold")
+                ax.grid(True, alpha=0.3)
+                for sp in ("top", "right"):
+                    ax.spines[sp].set_visible(False)
+
+                plt.xticks(rotation=45, ha="right")
+                plt.tight_layout()
+                st.pyplot(fig, use_container_width=True)
                 hist_tbl = player_hist[["Season","Team","Pos","G","MP","DIS"]].reset_index(drop=True).copy()
                 st.markdown(_slice_to_html(hist_tbl), unsafe_allow_html=True)
 
