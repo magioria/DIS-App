@@ -583,7 +583,7 @@ elif page == "Leaderboard":
         st.markdown(_slice_to_html(tbl), unsafe_allow_html=True)
 
         # ── Multi-season line chart (one line per selected player)
-        st.subheader("DIS History (multi-season)")
+        st.subheader("DIS History Comparison(multi-season)")
 
         all_dis = load_all_seasons()
         hist = all_dis[all_dis["Player"].isin(players_to_compare)].copy()
@@ -591,14 +591,15 @@ elif page == "Leaderboard":
         if hist.empty:
             st.info("No multi-season history available for the selected players.")
         else:
-            # chronological x-axis
-            hist = hist.sort_values("Season", key=lambda s: s.map(season_order_key))
+            # --- 1. build global chronological season order
+            all_seasons = sorted(hist["Season"].unique(), key=season_order_key)
 
             fig, ax = plt.subplots(figsize=(10, 4))
 
-            # plot one line per player
+            # --- 2. plot each player aligned on same x-axis
             for name, g in hist.groupby("Player"):
-                ax.plot(g["Season"], g["DIS"], marker="o", linewidth=2, label=name)
+                g = g.set_index("Season").reindex(all_seasons)   # align to global order
+                ax.plot(all_seasons, g["DIS"], marker="o", linewidth=2, label=name)
 
             ax.set_xlabel("Season")
             ax.set_ylabel("DIS")
