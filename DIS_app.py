@@ -380,6 +380,33 @@ def show_player_profile(player_row: pd.Series, df_season: pd.DataFrame):
             title="League Distribution of DIS (player highlighted)"
         )
 
+def stepper(label, key, min_val, max_val, step, default):
+    if key not in st.session_state:
+        st.session_state[key] = default
+
+    c1, c2, c3 = st.sidebar.columns([1, 3, 1])
+
+    with c1:
+        if st.button("−", key=f"{key}-minus", use_container_width=True):
+            st.session_state[key] = max(min_val, st.session_state[key] - step)
+
+    with c2:
+        st.session_state[key] = st.number_input(
+            label,
+            min_value=min_val,
+            max_value=max_val,
+            step=step,
+            value=st.session_state[key],
+            key=f"{key}_input",
+            format="%.1f" if isinstance(default, float) or isinstance(step, float) else "%d",
+        )
+
+    with c3:
+        if st.button("+", key=f"{key}-plus", use_container_width=True):
+            st.session_state[key] = min(max_val, st.session_state[key] + step)
+
+    return st.session_state[key]
+
 page = st.sidebar.radio("Navigate", ["What is DIS?", "Leaderboard"])
 
 if page == "What is DIS?":
@@ -472,19 +499,35 @@ elif page == "Leaderboard":
     player = st.sidebar.text_input("🔍 **Search a Player to view full Profile & History**")
     
     # Games filter
-    min_games = st.sidebar.slider("Minimum Games Played", min_value=1, max_value=int(df_display["G"].max()), value=1, step=1)
+    min_games = stepper(
+        "Minimum Games Played",
+        key="min_games",
+        min_val=1,
+        max_val=int(df_display["G"].max()),
+        step=1,
+        default=1,)
 
     # Minutes filter
-    max_minutes = int(df_display["MP"].max())
-    minute_options = [1] + list(range(50, max_minutes + 1, 50))
-    min_mp = st.sidebar.select_slider("Minimum Minutes Played", options=minute_options, value=1)
+    min_mp = stepper(
+        "Minimum Minutes Played",
+        key="min_minutes",
+        min_val=1,
+        max_val=int(df_display["MP"].max()),
+        step=50,   # comfortable step on mobile
+        default=1,)
 
     # --- NBA award eligibility toggle ---
     eligible_only = st.sidebar.checkbox("Only show award-eligible players (NBA 65-game rule)", value=False)
     if eligible_only:
-        # Approximate NBA requirement: 65 games & 1,300 total minutes
-        min_games = max(min_games, 65)
-        min_mp = max(min_mp, 1300)
+        # 65 games & ~1300 minutes
+        if min_games < 65:
+            min_games = 65
+            st.session_state["min_games"] = 65
+            st.session_state["min_games_input"] = 65
+        if min_mp < 1300:
+            min_mp = 1300
+            st.session_state["min_minutes"] = 1300
+            st.session_state["min_minutes_input"] = 1300
 
     # 65-game rule note
     st.sidebar.markdown("""
@@ -494,13 +537,14 @@ elif page == "Leaderboard":
     *Keep this in mind if you want to filter for the eligible players ;)*
     """)
 
-    dis_min = st.sidebar.slider(
-        "Minimum DIS (threshold)",
-        min_value=float(df_display["DIS"].min()),
-        max_value=float(df_display["DIS"].max()),
-        value=float(df_display["DIS"].min()),  # default = minimum DIS
-        step=0.1
-    )
+    # DIS filter
+    dis_min = stepper(
+        "Minimum DIS",
+        key="min_dis",
+        min_val=float(df_display["DIS"].min()),
+        max_val=float(df_display["DIS"].max()),
+        step=0.1,  # keep your original granularity
+        default=float(df_display["DIS"].min()),)
 
     # Team filter
     teams = df_display["Team"].unique()
