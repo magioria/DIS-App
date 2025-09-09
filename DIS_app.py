@@ -582,19 +582,34 @@ elif page == "Leaderboard":
         tbl.insert(0, "Rank", tbl["DIS"].apply(lambda x: int((df["DIS"] > x).sum() + 1)))
         st.markdown(_slice_to_html(tbl), unsafe_allow_html=True)
 
-        # Bar chart
-        st.subheader("DIS Comparison Chart")
-        plt.figure(figsize=(10, 5))
-        bars = plt.bar(comparison_df["Player"], comparison_df["DIS"])
-        for bar in bars:
-            h = bar.get_height()
-            plt.text(bar.get_x() + bar.get_width()/2, h/2, f"{h:.2f}",
-                     ha='center', va='center', fontsize=15)
-        plt.ylabel("Defensive Impact Score")
-        plt.xticks(rotation=45, ha='right')
-        plt.title("DIS for Selected Players")
-        plt.tight_layout()
-        st.pyplot(plt)
+        # ── Multi-season line chart (one line per selected player)
+        st.subheader("DIS History (multi-season)")
+
+        all_dis = load_all_seasons()
+        hist = all_dis[all_dis["Player"].isin(players_to_compare)].copy()
+
+        if hist.empty:
+            st.info("No multi-season history available for the selected players.")
+        else:
+            # chronological x-axis
+            hist = hist.sort_values("Season", key=lambda s: s.map(season_order_key))
+
+            fig, ax = plt.subplots(figsize=(10, 4))
+
+            # plot one line per player
+            for name, g in hist.groupby("Player"):
+                ax.plot(g["Season"], g["DIS"], marker="o", linewidth=2, label=name)
+
+            ax.set_xlabel("Season")
+            ax.set_ylabel("DIS")
+            ax.set_title("DIS over seasons", fontsize=11, fontweight="bold")
+            ax.grid(True, alpha=0.3)
+            for sp in ("top", "right"):
+                ax.spines[sp].set_visible(False)
+            plt.xticks(rotation=45, ha="right")
+            ax.legend(title="Player", fontsize=9, frameon=False)
+            plt.tight_layout()
+            st.pyplot(fig, use_container_width=True)
 
     else:
         if filtered_df.empty:
