@@ -469,7 +469,8 @@ elif page == "Leaderboard":
     df_display = df.copy()
 
     # Player search
-    player = st.sidebar.text_input("🔍 **Search a Player to view full Profile & History**")
+    all_players = sorted(df_display["Player"].unique())
+    player = st.sidebar.selectbox("🔍 Search a Player to view full Profile & History", options=[""] + all_players, index=0)
     
     # Games filter
     min_games = st.sidebar.number_input("Minimum Games Played", min_value=1, max_value=int(df_display["G"].max()), value=1, step=1, format="%d",)
