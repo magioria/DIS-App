@@ -590,10 +590,44 @@ if page == "What is DIS?":
     In short, DIS gives you a clearer, more complete picture of **who really changes the game** on defense.         
     """)
 
+    st.markdown("""
+    Want to see how players rank by DIS? 👉 Check out the **Player Leaderboard** page to explore the top and bottom defenders.             
+    """)
+    
     st.divider()
 
+    st.header("**How Team DIS is computed**")
+
     st.markdown("""
-    Want to see how players rank by DIS? 👉 Check out the **Leaderboard** page to explore the top and bottom defenders.             
+    For teams, we don’t simply average the DIS of all players.  
+    Instead, we use a **minutes-weighted average**:
+
+    \\[\\text{Team DIS} = \\frac{\\sum_i (DIS_i \\times Minutes_i)}{\\sum_i Minutes_i}\\]
+
+    This ensures that players who spend more time on the court have more influence on their team’s DIS,
+    while fringe players with very few minutes don’t distort the average.
+    """)
+
+    st.divider()
+
+    st.header("**Team DIS Interpretation Scale**")
+
+    st.markdown("""
+    Just like with players, teams can be grouped into categories:
+
+    - ≤ –1.3 → **Poor Defensive Team**  
+    - –1.3 to 0.7 → **Below Average**  
+    - 0.7 to 2.8 → **Average**  
+    - 2.8 to 4.3 → **Solid Defensive Team**  
+    - 4.3 to 6.0 → **Strong Defensive Team**  
+    - > 6.0 → **Elite / Championship Defense**
+
+    """)
+
+    st.pyplot(plot_team_dis_scale())
+
+    st.markdown("""
+    Want to see how teams rank by DIS? 👉 Check out the **Team Leaderboard** page to explore the best and worst defensive teams.             
     """)
 
 elif page == "Player Leaderboard":
