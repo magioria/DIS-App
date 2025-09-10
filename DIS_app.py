@@ -44,12 +44,12 @@ BINS = [
 BOUNDARIES = [-18, -5, 0, 3, 7, 13, 20, 35]
 
 TEAM_BINS = [
-    (-50, -1.3, "Poor Defensive Team", "#c62828"),   # dark red
+    (-5, -1.3, "Poor Defensive Team", "#c62828"),   # dark red
     (-1.3, 0.7, "Below Average", "#ef6c00"),            # orange
     (0.7, 2.8, "Average", "#ffef8a"),                   # light yellow
     (2.8, 4.3, "Solid Defensive Team", "#fdd835"),      # yellow
     (4.3, 6.0, "Strong Defensive Team", "#9ccc65"),     # light green
-    (6.0, 50, "Elite / Championship Defense", "#1b5e20") # dark green
+    (6.0, 10, "Elite / Championship Defense", "#1b5e20") # dark green
 ]
 
 def plot_dis_scale_with_steps():
@@ -97,7 +97,7 @@ def plot_dis_scale_with_steps():
     return fig
 
 def plot_team_dis_scale():
-    fig, ax = plt.subplots(figsize=(12, 2.2))
+    fig, ax = plt.subplots(figsize=(12, 2.8))
 
     for low, high, name, color in TEAM_BINS:
         ax.barh(0, high - low, left=low, color=color, edgecolor="black", height=0.6)
@@ -193,7 +193,7 @@ def _team_dis_cell_html(v: float) -> str:
             color = col
             break
     return (f"<div style='background:{color};color:{txt};font-weight:600;"
-            f"padding:2px 8px;border-radius:6px;text-align:right'>{v:.2f}</div>")
+            f"padding:2px 8px;border-radius:6px;text-align:left'>{v:.2f}</div>")
 
 def _slice_to_html_team(df_slice: pd.DataFrame) -> str:
     html = df_slice.to_html(
@@ -740,14 +740,14 @@ elif page == "Team Leaderboard":
     team_weighted = (
         df_display.groupby("Team")
         .apply(lambda g: (g["DIS"] * g["MP"]).sum() / g["MP"].sum())
-        .reset_index(name="Weighted_Avg_DIS")
-        .sort_values("Weighted_Avg_DIS", ascending=False)
+        .reset_index(name="DIS")
+        .sort_values("DIS", ascending=False)
     )
 
     # Optional: also show how many players per team contributed
-    team_weighted["Players"] = df_display.groupby("Team")["Player"].count().values
+    team_weighted["Players considered"] = df_display.groupby("Team")["Player"].count().values
 
-    team_weighted["Weighted_Avg_DIS"] = team_weighted["Weighted_Avg_DIS"].round(2)
+    team_weighted["DIS"] = team_weighted["DIS"].round(2)
 
     # Add rank column
     team_weighted.insert(0, "Rank", range(1, len(team_weighted) + 1))
