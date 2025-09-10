@@ -196,11 +196,13 @@ def _team_dis_cell_html(v: float) -> str:
             f"padding:2px 8px;border-radius:6px;text-align:left'>{v:.2f}</div>")
 
 def _slice_to_html_team(df_slice: pd.DataFrame) -> str:
-    html = df_slice.to_html(
-        index=False,
-        escape=False,
-        formatters={"DIS": _team_dis_cell_html}
-    )
+    formatters = {}
+    if "DIS" in df_slice.columns:
+        formatters["DIS"] = _team_dis_cell_html
+    if "Team DIS" in df_slice.columns:
+        formatters["Team DIS"] = _team_dis_cell_html
+
+    html = df_slice.to_html(index=False, escape=False, formatters=formatters)
     html = html.replace("<th>", "<th style='text-align:left;'>")
     return html
 
