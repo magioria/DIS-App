@@ -456,13 +456,32 @@ def show_team_profile(team: str, df_season: pd.DataFrame):
 
     st.subheader(f"{team} — Team Profile")
 
-    # Current season row
-    result_tbl = pd.DataFrame([{
-        "Team": team,
-        "Players": len(team_df),
-        "Team DIS": round(team_dis, 2)
-    }])
-    st.dataframe(result_tbl, use_container_width=True)
+    # Current season row (team leaderboard style)
+    team_season = (
+        df_season.groupby("Team")
+        .apply(lambda g: (g["DIS"] * g["MP"]).sum() / g["MP"].sum())
+        .reset_index(name="DIS")
+        .sort_values("DIS", ascending=False)
+        .reset_index(drop=True)
+    )
+
+    # Add rank
+    team_season.insert(0, "Rank", range(1, len(team_season) + 1))
+
+    # Add player count
+    players_count = df_season.groupby("Team")["Player"].count().reset_index(name="Players")
+    team_season = team_season.merge(players_count, on="Team")
+
+    # Filter to just this team
+    team_row = team_season[team_season["Team"] == team][["Rank", "Team", "Players", "DIS"]]
+
+    # Rename columns for display
+    team_row = team_row.rename(columns={"DIS": "Team DIS"})
+
+    team_row["Team DIS"] = team_row["Team DIS"].round(2)
+
+    # Show styled row (colored DIS pill)
+    st.markdown(_slice_to_html_team(team_row), unsafe_allow_html=True)
 
     # DIS badge
     st.markdown(
