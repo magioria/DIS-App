@@ -199,7 +199,7 @@ def _slice_to_html_team(df_slice: pd.DataFrame) -> str:
     html = df_slice.to_html(
         index=False,
         escape=False,
-        formatters={"Weighted_Avg_DIS": _team_dis_cell_html}
+        formatters={"DIS": _team_dis_cell_html}
     )
     html = html.replace("<th>", "<th style='text-align:left;'>")
     return html
