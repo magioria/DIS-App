@@ -150,7 +150,7 @@ def style_table(df: pd.DataFrame) -> str:
         return (
             f"<div style='width:100%; display:block; box-sizing:border-box; "
             f"background:{color}; color:{txt}; font-weight:600; "
-            f"padding:4px 10px; border-radius:8px; text-align:right'>{v:.6f}</div>"
+            f"padding:4px 10px; border-radius:8px; text-align:right'>{v:.2f}</div>"
         )
 
     # Render as HTML; use formatter only for DIS
@@ -179,7 +179,7 @@ def _dis_cell_html(v: float) -> str:
                 txt = "white"
             break
     return (f"<div style='background:{color};color:{txt};font-weight:600;"
-            f"padding:2px 8px;border-radius:6px;text-align:right'>{v:.6f}</div>")
+            f"padding:2px 8px;border-radius:6px;text-align:right'>{v:.2f}</div>")
 
 def _team_dis_cell_html(v: float) -> str:
     """Return HTML for a colored Team DIS cell."""
@@ -714,7 +714,6 @@ elif page == "Player Leaderboard":
                     .reset_index(drop=True)
                     .rename_axis("Rank")
                     .rename(index=lambda x: x + 1))
-                top10["DIS"] = top10["DIS"].round(2)
                 top10.insert(0, "Rank", np.arange(1, len(top10) + 1))
                 avg_pos_dis = round(df[df["Pos"] == pos]["DIS"].mean(), 2)
                 avg_pos_filt_dis = round(pos_df["DIS"].mean(), 2)
