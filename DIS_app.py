@@ -875,28 +875,27 @@ elif page == "Team Leaderboard":
             plt.tight_layout()
             st.pyplot(fig, use_container_width=True)
 
-    st.subheader(f"Team DIS Leaderboard (Minutes-Weighted) — {selected_season}")
+    else:
+        st.subheader(f"Team DIS Leaderboard (Minutes-Weighted) — {selected_season}")
 
-    # Minutes-weighted average DIS
-    team_weighted = (
-        df_display.groupby("Team")
-        .apply(lambda g: (g["DIS"] * g["MP"]).sum() / g["MP"].sum())
-        .reset_index(name="DIS")
-        .sort_values("DIS", ascending=False)
-    )
+        # Minutes-weighted average DIS
+        team_weighted = (
+            df_display.groupby("Team")
+            .apply(lambda g: (g["DIS"] * g["MP"]).sum() / g["MP"].sum())
+            .reset_index(name="DIS")
+            .sort_values("DIS", ascending=False))
 
-    # Optional: also show how many players per team contributed
-    team_weighted["Players considered"] = df_display.groupby("Team")["Player"].count().values
+        # Optional: also show how many players per team contributed
+        team_weighted["Players considered"] = df_display.groupby("Team")["Player"].count().values
 
-    team_weighted["DIS"] = team_weighted["DIS"].round(2)
+        team_weighted["DIS"] = team_weighted["DIS"].round(2)
+        team_weighted = team_weighted.rename(columns={"DIS": "Team DIS"})
 
-    team_weighted = team_weighted.rename(columns={"DIS": "Team DIS"})
+        # Add rank column
+        team_weighted.insert(0, "Rank", range(1, len(team_weighted) + 1))
 
-    # Add rank column
-    team_weighted.insert(0, "Rank", range(1, len(team_weighted) + 1))
+        st.markdown(_slice_to_html_team(team_weighted), unsafe_allow_html=True)
 
-    st.markdown(_slice_to_html_team(team_weighted), unsafe_allow_html=True)
-
-    st.divider()
-    st.pyplot(plot_team_dis_scale())  
+        st.divider()
+        st.pyplot(plot_team_dis_scale()) 
   
