@@ -471,11 +471,11 @@ def show_team_profile(team: str, df_season: pd.DataFrame):
     team_season.insert(0, "Rank", range(1, len(team_season) + 1))
 
     # Add player count
-    players_count = df_season.groupby("Team")["Player"].count().reset_index(name="Players")
+    players_count = df_season.groupby("Team")["Player"].count().reset_index(name="Players considered")
     team_season = team_season.merge(players_count, on="Team")
 
     # Filter to just this team
-    team_row = team_season[team_season["Team"] == team][["Rank", "Team", "Players", "DIS"]]
+    team_row = team_season[team_season["Team"] == team][["Rank", "Team", "DIS", "Players considered"]]
 
     # Rename columns for display
     team_row = team_row.rename(columns={"DIS": "Team DIS"})
@@ -873,7 +873,7 @@ elif page == "Team Leaderboard":
         comparison_df.insert(0, "Rank", range(1, len(comparison_df) + 1))
 
         # Add players count
-        players_count = df_display.groupby("Team")["Player"].count().reset_index(name="Players")
+        players_count = df_display.groupby("Team")["Player"].count().reset_index(name="Players considered")
         comparison_df = comparison_df.merge(players_count, on="Team")
 
         # Filter to selected teams
@@ -933,7 +933,4 @@ elif page == "Team Leaderboard":
         team_weighted.insert(0, "Rank", range(1, len(team_weighted) + 1))
 
         st.markdown(_slice_to_html_team(team_weighted), unsafe_allow_html=True)
-
-        st.divider()
-        st.pyplot(plot_team_dis_scale()) 
   
