@@ -815,10 +815,65 @@ elif page == "Team Leaderboard":
     # Team search
     all_teams = sorted(df_display["Team"].unique())
     team = st.sidebar.selectbox("🔍 Search a Team to view Profile & History", options=[""] + all_teams, index=0)
+        
+    #Compare Teams
+    teams_to_compare = st.sidebar.multiselect("Compare Teams", options=sorted(df_display["Team"].unique()), default=[])
 
     if team:
         show_team_profile(team, df_display)
         st.stop()
+
+    elif teams_to_compare:
+        comparison_df = (
+            df_display.groupby("Team")
+            .apply(lambda g: (g["DIS"] * g["MP"]).sum() / g["MP"].sum())
+            .reset_index(name="Team DIS")
+            .sort_values("Team DIS", ascending=False)
+            .reset_index(drop=True))
+
+        # Add ranks
+        comparison_df.insert(0, "Rank", range(1, len(comparison_df) + 1))
+
+        # Add players count
+        players_count = df_display.groupby("Team")["Player"].count().reset_index(name="Players")
+        comparison_df = comparison_df.merge(players_count, on="Team")
+
+        # Filter to selected teams
+        comparison_df = comparison_df[comparison_df["Team"].isin(teams_to_compare)]
+
+        st.subheader("Team Comparison")
+        st.markdown(_slice_to_html_team(comparison_df), unsafe_allow_html=True)
+
+        # --- Multi-season line chart ---
+        st.subheader("Team DIS History Comparison (multi-season)")
+
+        all_dis = load_all_seasons()
+        hist = (
+            all_dis[all_dis["Team"].isin(teams_to_compare)]
+            .groupby(["Season", "Team"])
+            .apply(lambda g: (g["DIS"] * g["MP"]).sum() / g["MP"].sum())
+            .reset_index(name="Team DIS"))
+
+        if hist.empty:
+            st.info("No multi-season history available for the selected teams.")
+        else:
+            all_seasons = sorted(hist["Season"].unique(), key=season_order_key)
+
+            fig, ax = plt.subplots(figsize=(10, 4))
+            for name, g in hist.groupby("Team"):
+                g = g.set_index("Season").reindex(all_seasons)
+                ax.plot(all_seasons, g["Team DIS"], marker="o", linewidth=2, label=name)
+
+            ax.set_xlabel("Season")
+            ax.set_ylabel("Team DIS")
+            ax.set_title("Team DIS over seasons", fontsize=11, fontweight="bold")
+            ax.grid(True, alpha=0.3)
+            for sp in ("top", "right"):
+                ax.spines[sp].set_visible(False)
+            plt.xticks(rotation=45, ha="right")
+            ax.legend(title="Team", fontsize=9, frameon=False)
+            plt.tight_layout()
+            st.pyplot(fig, use_container_width=True)
 
     st.subheader(f"Team DIS Leaderboard (Minutes-Weighted) — {selected_season}")
 
