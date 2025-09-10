@@ -546,13 +546,13 @@ if page == "What is DIS?":
     st.markdown("""
     Values are standardized so that 0 = league average. Positive = better than average, negative = worse.
                 
-    - 20 or more → Generational / DPOY-level season
-    - 13–19.9 → Elite Defender 
-    - 7–12.9 → Strong defender
-    - 3–6.9 → Solid contributor
-    - 0–2.9 → Average defender
-    - -5 to -0.1 → Below average
-    - Less than -5 → Poor Defender
+    - 20 or more → **Generational / DPOY-level season**
+    - 13–19.9 → **Elite Defender**
+    - 7–12.9 → **Strong defender**
+    - 3–6.9 → **Solid contributor**
+    - 0–2.9 → **Average defender**
+    - -5 to -0.1 → **Below average**
+    - Less than -5 → **Poor Defender**
     """)
 
     st.pyplot(plot_dis_scale_with_steps())
@@ -603,11 +603,11 @@ if page == "What is DIS?":
     st.markdown("""
     For teams, we don’t simply average the DIS of all players.  
     Instead, we use a **minutes-weighted average**:
+    """)
 
-    $$
-    \text{Team DIS} = \frac{\sum_i (DIS_i \times Minutes_i)}{\sum_i Minutes_i}
-    $$
+    st.latex(r"""\text{Team DIS} = \frac{\sum_i \big(DIS_i \times Minutes_i\big)}{\sum_i Minutes_i}""")
 
+    st.markdown("""
     This ensures that players who spend more time on the court have more influence on their team’s DIS,
     while players with very few minutes don’t distort the average.
     """)
