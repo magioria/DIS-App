@@ -43,6 +43,15 @@ BINS = [
 ]
 BOUNDARIES = [-18, -5, 0, 3, 7, 13, 20, 35]
 
+TEAM_BINS = [
+    (-50, -1.3, "Poor Defensive Team", "#c62828"),   # dark red
+    (-1.3, 0.7, "Below Average", "#ef6c00"),            # orange
+    (0.7, 2.8, "Average", "#ffef8a"),                   # light yellow
+    (2.8, 4.3, "Solid Defensive Team", "#fdd835"),      # yellow
+    (4.3, 6.0, "Strong Defensive Team", "#9ccc65"),     # light green
+    (6.0, 50, "Elite / Championship Defense", "#1b5e20") # dark green
+]
+
 def plot_dis_scale_with_steps():
     fig, ax = plt.subplots(figsize=(12, 2.8))
 
@@ -81,6 +90,34 @@ def plot_dis_scale_with_steps():
     ax.set_xlabel("DIS")
     ax.set_title("DIS Interpretation Scale (green = best, red = worst)",
                  fontsize=12, fontweight="bold")
+    for sp in ("top", "right", "left", "bottom"):
+        ax.spines[sp].set_visible(False)
+
+    fig.tight_layout()
+    return fig
+
+def plot_team_dis_scale():
+    fig, ax = plt.subplots(figsize=(12, 2.2))
+
+    for low, high, name, color in TEAM_BINS:
+        ax.barh(0, high - low, left=low, color=color, edgecolor="black", height=0.6)
+        x = (low + high) / 2
+        ax.text(x, 0, name.replace(" ", "\n"), ha="center", va="center",
+                fontsize=9, fontweight="bold", color="black")
+
+    # Draw boundary ticks
+    for lo, hi, _, _ in TEAM_BINS:
+        ax.vlines(lo, -0.4, -0.1, color="black", linewidth=1)
+        ax.text(lo, -0.55, f"{lo:.1f}", ha="center", va="top", fontsize=9)
+    ax.vlines(TEAM_BINS[-1][1], -0.4, -0.1, color="black", linewidth=1)
+    ax.text(TEAM_BINS[-1][1], -0.55, f"{TEAM_BINS[-1][1]:.1f}", ha="center", va="top", fontsize=9)
+
+    ax.set_xlim(min(lo for lo, _, _, _ in TEAM_BINS), max(hi for _, hi, _, _ in TEAM_BINS))
+    ax.set_ylim(-0.7, 0.7)
+    ax.set_yticks([])
+    ax.set_xlabel("Minutes-weighted Team DIS")
+    ax.set_title("Team DIS Interpretation Scale", fontsize=12, fontweight="bold")
+
     for sp in ("top", "right", "left", "bottom"):
         ax.spines[sp].set_visible(False)
 
@@ -143,6 +180,29 @@ def _dis_cell_html(v: float) -> str:
             break
     return (f"<div style='background:{color};color:{txt};font-weight:600;"
             f"padding:2px 8px;border-radius:6px;text-align:right'>{v:.6f}</div>")
+
+def _team_dis_cell_html(v: float) -> str:
+    """Return HTML for a colored Team DIS cell."""
+    color = "#e0e0e0"; txt = "black"
+    for lo, hi, _, col in TEAM_BINS:
+        if lo <= v < hi:
+            if col in ("#fdd835", "#ffef8a"):  # yellows
+                txt = "black"
+            else:
+                txt = "white"
+            color = col
+            break
+    return (f"<div style='background:{color};color:{txt};font-weight:600;"
+            f"padding:2px 8px;border-radius:6px;text-align:right'>{v:.2f}</div>")
+
+def _slice_to_html_team(df_slice: pd.DataFrame) -> str:
+    html = df_slice.to_html(
+        index=False,
+        escape=False,
+        formatters={"Weighted_Avg_DIS": _team_dis_cell_html}
+    )
+    html = html.replace("<th>", "<th style='text-align:left;'>")
+    return html
 
 @st.cache_data(ttl=120)
 def _slice_to_html(df_slice: pd.DataFrame) -> str:
@@ -290,6 +350,13 @@ def _dis_category(dis: float):
                 txt = "black"
             else:
                 txt = "white"
+            return name, color, txt
+    return "—", "#e0e0e0", "black"
+
+def _team_dis_category(v: float):
+    for lo, hi, name, color in TEAM_BINS:
+        if lo <= v < hi:
+            txt = "black" if color in ("#fdd835", "#ffef8a") else "white"
             return name, color, txt
     return "—", "#e0e0e0", "black"
 
@@ -682,4 +749,11 @@ elif page == "Team Leaderboard":
 
     team_weighted["Weighted_Avg_DIS"] = team_weighted["Weighted_Avg_DIS"].round(2)
 
-    st.markdown(_slice_to_html(team_weighted), unsafe_allow_html=True)    
+    # Add rank column
+    team_weighted.insert(0, "Rank", range(1, len(team_weighted) + 1))
+
+    st.markdown(_slice_to_html_team(team_weighted), unsafe_allow_html=True)
+
+    st.divider()
+    st.pyplot(plot_team_dis_scale())  
+  
