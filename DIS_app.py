@@ -150,7 +150,7 @@ def style_table(df: pd.DataFrame) -> str:
         return (
             f"<div style='width:100%; display:block; box-sizing:border-box; "
             f"background:{color}; color:{txt}; font-weight:600; "
-            f"padding:4px 10px; border-radius:8px; text-align:right'>{v:.2f}</div>"
+            f"padding:4px 10px; border-radius:8px; text-align:left'>{v:.2f}</div>"
         )
 
     # Render as HTML; use formatter only for DIS
@@ -179,7 +179,7 @@ def _dis_cell_html(v: float) -> str:
                 txt = "white"
             break
     return (f"<div style='background:{color};color:{txt};font-weight:600;"
-            f"padding:2px 8px;border-radius:6px;text-align:right'>{v:.2f}</div>")
+            f"padding:2px 8px;border-radius:6px;text-align:left'>{v:.2f}</div>")
 
 def _team_dis_cell_html(v: float) -> str:
     """Return HTML for a colored Team DIS cell."""
@@ -446,6 +446,59 @@ def show_player_profile(player_row: pd.Series, df_season: pd.DataFrame):
             df_season, player_dis,
             title="League Distribution of DIS (player highlighted)"
         )
+
+def show_team_profile(team: str, df_season: pd.DataFrame):
+    """Render a team profile card with DIS badge, history line chart, and history table.
+       - team: team abbreviation (string)
+       - df_season: the current season dataframe
+    """
+    # Current-season weighted DIS for the team
+    team_df = df_season[df_season["Team"] == team]
+    team_dis = (team_df["DIS"] * team_df["MP"]).sum() / team_df["MP"].sum()
+    cat, color, txt = _team_dis_category(team_dis)
+
+    st.subheader(f"{team} — Team Profile")
+
+    # DIS badge
+    st.markdown(
+        f"<div style='display:inline-block;padding:6px 10px;border-radius:10px;"
+        f"background:{color};color:{txt};font-weight:700'>"
+        f"Team DIS {team_dis:.2f} · {cat}</div>",
+        unsafe_allow_html=True
+    )
+
+    st.divider()
+
+    # History across all seasons
+    all_dis = load_all_seasons()
+    team_hist = (
+        all_dis[all_dis["Team"].str.lower() == team.lower()]
+        .groupby("Season")
+        .apply(lambda g: (g["DIS"] * g["MP"]).sum() / g["MP"].sum())
+        .reset_index(name="DIS")
+        .sort_values("Season", key=lambda s: s.map(season_order_key))
+    )
+
+    if not team_hist.empty:
+        st.subheader(f"{team} — DIS History")
+
+        # Line chart
+        fig, ax = plt.subplots(figsize=(8, 3))
+        ax.plot(team_hist["Season"], team_hist["DIS"], marker="o", linewidth=2)
+        ax.set_xlabel("Season"); ax.set_ylabel("Team DIS")
+        ax.set_title("DIS over seasons", fontsize=11, fontweight="bold")
+        ax.grid(True, alpha=0.3)
+        for sp in ("top", "right"):
+            ax.spines[sp].set_visible(False)
+        plt.xticks(rotation=45, ha="right")
+        plt.tight_layout()
+        st.pyplot(fig, use_container_width=True)
+
+        # History table
+        hist_tbl = team_hist.sort_values("Season", ascending=False).reset_index(drop=True)
+        st.dataframe(hist_tbl, use_container_width=True)
+    else:
+        st.info("No multi-season history found for this team.")
 
 page = st.sidebar.radio("Navigate", ["What is DIS?", "Player Leaderboard", "Team Leaderboard"])
 
@@ -733,6 +786,14 @@ elif page == "Team Leaderboard":
 
     # Load the selected season's data
     df_display = pd.read_csv(season_files[selected_season])
+
+    # Team search
+    all_teams = sorted(df_display["Team"].unique())
+    team = st.sidebar.selectbox("🔍 Search a Team to view Profile & History", options=[""] + all_teams, index=0)
+
+    if team:
+        show_team_profile(team, df_display)
+        st.stop()
 
     st.subheader(f"Team DIS Leaderboard (Minutes-Weighted) — {selected_season}")
 
