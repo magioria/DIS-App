@@ -509,7 +509,7 @@ def show_team_profile(team: str, df_season: pd.DataFrame):
 
         # Line chart
         fig, ax = plt.subplots(figsize=(8, 3))
-        ax.plot(team_hist["Season"], team_hist["DIS"], marker="o", linewidth=2)
+        ax.plot(team_hist["Season"], team_hist["Team DIS"], marker="o", linewidth=2)
         ax.set_xlabel("Season"); ax.set_ylabel("Team DIS")
         ax.set_title("DIS over seasons", fontsize=11, fontweight="bold")
         ax.grid(True, alpha=0.3)
