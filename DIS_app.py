@@ -501,9 +501,8 @@ def show_team_profile(team: str, df_season: pd.DataFrame):
         all_dis[all_dis["Team"].str.lower() == team.lower()]
         .groupby("Season")
         .apply(lambda g: (g["DIS"] * g["MP"]).sum() / g["MP"].sum())
-        .reset_index(name="DIS")
-        .sort_values("Season", key=lambda s: s.map(season_order_key))
-    )
+        .reset_index(name="Team DIS")
+        .sort_values("Season", key=lambda s: s.map(season_order_key)))
 
     if not team_hist.empty:
         st.subheader(f"{team} — DIS History")
@@ -835,6 +834,8 @@ elif page == "Team Leaderboard":
     team_weighted["Players considered"] = df_display.groupby("Team")["Player"].count().values
 
     team_weighted["DIS"] = team_weighted["DIS"].round(2)
+
+    team_weighted = team_weighted.rename(columns={"DIS": "Team DIS"})
 
     # Add rank column
     team_weighted.insert(0, "Rank", range(1, len(team_weighted) + 1))
