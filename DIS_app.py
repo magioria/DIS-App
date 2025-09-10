@@ -447,7 +447,7 @@ def show_player_profile(player_row: pd.Series, df_season: pd.DataFrame):
             title="League Distribution of DIS (player highlighted)"
         )
 
-page = st.sidebar.radio("Navigate", ["What is DIS?", "Leaderboard", "Team Leaderboard"])
+page = st.sidebar.radio("Navigate", ["What is DIS?", "Player Leaderboard", "Team Leaderboard"])
 
 if page == "What is DIS?":
     
@@ -518,7 +518,7 @@ if page == "What is DIS?":
     Want to see how players rank by DIS? 👉 Check out the **Leaderboard** page to explore the top and bottom defenders.             
     """)
 
-elif page == "Leaderboard":
+elif page == "Player Leaderboard":
 
     # Map of season names to file paths (built from /data contents)
     season_files = {p.stem.split("DIS_")[1]: p for p in OUTPUTS_DIR.glob("DIS_*.csv")}
@@ -714,6 +714,7 @@ elif page == "Leaderboard":
                     .reset_index(drop=True)
                     .rename_axis("Rank")
                     .rename(index=lambda x: x + 1))
+                top10["DIS"] = top10["DIS"].round(2)
                 top10.insert(0, "Rank", np.arange(1, len(top10) + 1))
                 avg_pos_dis = round(df[df["Pos"] == pos]["DIS"].mean(), 2)
                 avg_pos_filt_dis = round(pos_df["DIS"].mean(), 2)
