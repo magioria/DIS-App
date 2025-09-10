@@ -380,7 +380,7 @@ def show_player_profile(player_row: pd.Series, df_season: pd.DataFrame):
             title="League Distribution of DIS (player highlighted)"
         )
 
-page = st.sidebar.radio("Navigate", ["What is DIS?", "Leaderboard"])
+page = st.sidebar.radio("Navigate", ["What is DIS?", "Leaderboard", "Team Leaderboard"])
 
 if page == "What is DIS?":
     
@@ -654,3 +654,32 @@ elif page == "Leaderboard":
                     st.markdown(_slice_to_html(top10), unsafe_allow_html=True)
                     st.markdown(f"**Average DIS for all {pos}s:** {avg_pos_dis}")
                     st.markdown(f"**Average DIS for all {pos}s (only filtered players):** {avg_pos_filt_dis}")
+
+elif page == "Team Leaderboard":
+    # Map of season names to file paths (built from /data contents)
+    season_files = {p.stem.split("DIS_")[1]: p for p in OUTPUTS_DIR.glob("DIS_*.csv")}
+    seasons_sorted = sorted(season_files.keys(), reverse=True)
+
+    # Sidebar selector
+    st.sidebar.title("Filters")
+    selected_season = st.sidebar.selectbox("Select season", seasons_sorted, index=0)
+
+    # Load the selected season's data
+    df_display = pd.read_csv(season_files[selected_season])
+
+    st.subheader(f"Team DIS Leaderboard (Minutes-Weighted) — {selected_season}")
+
+    # Minutes-weighted average DIS
+    team_weighted = (
+        df_display.groupby("Team")
+        .apply(lambda g: (g["DIS"] * g["MP"]).sum() / g["MP"].sum())
+        .reset_index(name="Weighted_Avg_DIS")
+        .sort_values("Weighted_Avg_DIS", ascending=False)
+    )
+
+    # Optional: also show how many players per team contributed
+    team_weighted["Players"] = df_display.groupby("Team")["Player"].count().values
+
+    team_weighted["Weighted_Avg_DIS"] = team_weighted["Weighted_Avg_DIS"].round(2)
+
+    st.markdown(_slice_to_html(team_weighted), unsafe_allow_html=True)    
