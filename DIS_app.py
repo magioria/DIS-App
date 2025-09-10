@@ -448,16 +448,21 @@ def show_player_profile(player_row: pd.Series, df_season: pd.DataFrame):
         )
 
 def show_team_profile(team: str, df_season: pd.DataFrame):
-    """Render a team profile card with DIS badge, history line chart, and history table.
-       - team: team abbreviation (string)
-       - df_season: the current season dataframe
-    """
+    """Render a team profile card with current row, DIS badge, history line chart, and history table."""
     # Current-season weighted DIS for the team
     team_df = df_season[df_season["Team"] == team]
     team_dis = (team_df["DIS"] * team_df["MP"]).sum() / team_df["MP"].sum()
     cat, color, txt = _team_dis_category(team_dis)
 
     st.subheader(f"{team} — Team Profile")
+
+    # Current season row
+    result_tbl = pd.DataFrame([{
+        "Team": team,
+        "Players": len(team_df),
+        "Team DIS": round(team_dis, 2)
+    }])
+    st.dataframe(result_tbl, use_container_width=True)
 
     # DIS badge
     st.markdown(
@@ -494,9 +499,9 @@ def show_team_profile(team: str, df_season: pd.DataFrame):
         plt.tight_layout()
         st.pyplot(fig, use_container_width=True)
 
-        # History table
+        # History table (colored DIS cells, no Rank column)
         hist_tbl = team_hist.sort_values("Season", ascending=False).reset_index(drop=True)
-        st.dataframe(hist_tbl, use_container_width=True)
+        st.markdown(_slice_to_html_team(hist_tbl), unsafe_allow_html=True)
     else:
         st.info("No multi-season history found for this team.")
 
