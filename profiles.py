@@ -1,6 +1,7 @@
 import streamlit as st
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from data_utils import load_all_seasons, season_order_key
 from styling import _dis_category, _team_dis_category, _slice_to_html_team, _percentile_of_value
 from plots import _pct_bar, _league_hist_with_marker

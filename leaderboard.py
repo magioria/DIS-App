@@ -1,6 +1,7 @@
 import math
 import numpy as np
 import streamlit as st
+import pandas as pd
 from styling import _slice_to_html
 
 
