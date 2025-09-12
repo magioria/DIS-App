@@ -15,6 +15,19 @@ The app itself is the way I decided to share it. Built with **Python + Streamlit
 
 ---
 
+## 📸 Screenshots
+
+### Player Profile
+![Player Profile Example](<img width="742" height="784" alt="Screenshot 2025-09-12 181138" src="https://github.com/user-attachments/assets/5463cf67-6be8-47dc-942c-afa4a990c15e" />)
+
+### Team Profile
+![Team Profile Example](<img width="754" height="833" alt="image" src="https://github.com/user-attachments/assets/fdf27540-9b21-417e-b9ef-b7171ecf0198" />)
+
+### Leaderboard
+![Leaderboard Example](<img width="1447" height="834" alt="Screenshot 2025-09-12 181059" src="https://github.com/user-attachments/assets/984a9c82-9d22-443b-a0a7-581f14d18544" />)
+
+---
+
 ## ⚙️ How to Run It Yourself
 1. Clone this repo:
    ```bash
