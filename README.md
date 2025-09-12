@@ -53,7 +53,12 @@ The app itself is the way I decided to share it. Built with **Python + Streamlit
 ```
 DIS-App/
 │── outputs/          # Cleaned CSV outputs
-│── DIS_app.py        # Main Streamlit app
+│── DIS_app.py        # Main Streamlit app (navigation & pages)
+│── data_utils.py     # Data loading and season ordering
+│── styling.py        # Table styling, category colors, and percentiles
+│── plots.py          # Matplotlib/Streamlit charts and visualizations
+│── profiles.py       # Player and team profile rendering
+│── leaderboard.py    # Leaderboard pagination and rendering
 │── requirements.txt  # Python dependencies
 └── README.md         # You’re here!
 ```
