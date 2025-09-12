@@ -17,13 +17,13 @@ The app itself is the way I decided to share it. Built with **Python + Streamlit
 
 ## 📸 Screenshots
 
-### Player Profile
+### Player Profile Example
 ![Alex Caruso Player Profile Example](https://github.com/user-attachments/assets/5463cf67-6be8-47dc-942c-afa4a990c15e)
 
-### Team Profile
+### Team Profile Example
 ![Utah Jazz Team Profile Example](https://github.com/user-attachments/assets/fdf27540-9b21-417e-b9ef-b7171ecf0198)
 
-### Leaderboard
+### Player Leaderboard Page Example
 ![2024-2025 Player Leaderboard Example](https://github.com/user-attachments/assets/984a9c82-9d22-443b-a0a7-581f14d18544)
 
 ---
