@@ -78,6 +78,12 @@ The goal: make defense measurable, comparable, and fun to explore.
 
 ---
 
+### 📑 Data Sources
+This project uses publicly available basketball data from [Basketball Reference](https://www.basketball-reference.com/), [NBA.com/stats](https://www.nba.com/stats), and [BBall Index](https://www.bball-index.com/).  
+All data is used strictly for **educational, research, and non-commercial purposes** in the creation of the DIS metric.  
+
+---
+
 ## 📜 License & Professional Use
 This project is licensed under the **Creative Commons Attribution-NonCommercial 4.0 International License (CC BY-NC 4.0)**.  
 
