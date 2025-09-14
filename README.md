@@ -79,10 +79,15 @@ The goal: make defense measurable, comparable, and fun to explore.
 ---
 
 ## 📜 License & Professional Use
-This project is shared openly for learning, discussion, and basketball fandom.  
-If you’re seriously interested in my work, whether it’s for **collaboration or professional projects**, feel free to reach out.  
+This project is licensed under the **Creative Commons Attribution-NonCommercial 4.0 International License (CC BY-NC 4.0)**.  
+
+- ✅ Free to use for personal, educational, or research purposes.  
+- ✅ You must credit **Matteo Capucci** (author).  
+- ❌ Commercial use is not allowed without explicit permission.  
+
+If you’re seriously interested in my work, whether it’s for **collaboration or professional projects**, feel free to reach out:  
 
 👉 Created by **Matteo Capucci** ([@magioria](https://github.com/magioria))  
 📩 [Connect on LinkedIn](https://www.linkedin.com/in/matteo-capucci/)  
 
----
+See the [LICENSE](LICENSE) file for full details.  
