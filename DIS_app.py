@@ -20,7 +20,7 @@ if page == "What is DIS?":
     st.markdown("""
     The **Defensive Impact Score**, abbreviated DIS, is a custom stat that estimates how impactful each player is on defense.
 
-    Unlike traditional defensive stats that rely heavily on steals, blocks, or team ratings, DIS blends multiple layers of data, including box score performance, matchup quality, and hustle stats, to assess how **consistently** and **effectively** a player influences defensive outcomes.
+    Unlike traditional defensive stats that rely heavily on steals, blocks, or team ratings, DIS blends multiple layers of data, including hustle stats and matchup quality, to assess how **consistently** and **effectively** a player influences defensive outcomes.
 
     DIS is designed to be **scale-consistent** across seasons, to evaluate players fairly regardless of their position, and to minimize the distortion caused by overall team performance, offering a robust tool for identifying both **elite** and **underrated defenders** who may not show up in highlight reels.
     """)     
