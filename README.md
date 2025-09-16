@@ -1,4 +1,4 @@
-# DIS-App 🏀
+# Defensive Impact Score (DIS) 🏀
 
 Welcome to the **Defensive Impact Score (DIS)**!  
 DIS is my own custom stat that brings a new way to look at NBA defense, going beyond the box score to capture how much impact players (and teams) really have on that end of the floor.  
