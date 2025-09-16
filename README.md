@@ -3,7 +3,7 @@
 Welcome to the **Defensive Impact Score (DIS)**!  
 DIS is my own custom stat that brings a new way to look at NBA defense, going beyond the box score to capture how much impact players (and teams) really have on that end of the floor.  
 
-The app itself is the way I decided to share it. Built with **Python + Streamlit**, this app makes it easy to explore, compare, and visualize defensive value in a fun and interactive way.
+The DIS-App is the way I decided to share it. Built with **Python + Streamlit**, this app makes it easy to explore, compare, and visualize defensive value in a fun and interactive way.
 
 ---
 
